@@ -22,8 +22,8 @@ const NavBar = () => {
             link: "/",
         },
         {
-            menu: "Contact",
-            link: "/",
+            menu: "Profile",
+            link: "profile",
         },
         {
             menu: "Settings",

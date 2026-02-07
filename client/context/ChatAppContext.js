@@ -120,8 +120,10 @@ export const ChatAppProvider = ({ children }) => {
             setLoading(false);
             // Instead of reloading, refresh the messages
             readMessage(msgAddress);
+            readMessage(msgAddress);
         } catch (error) {
-            setError("Please retry sending your message");
+            console.error("Error sending message:", error);
+            setError("Transaction failed. File might be too large (max ~100KB) or gas limit exceeded.");
         }
     };
 
@@ -173,6 +175,7 @@ export const ChatAppProvider = ({ children }) => {
                 currentUserName,
                 currentUserAddress,
                 clearCurrentChat,
+                setError, // Expose setError for child components
             }}
         >
             {children}

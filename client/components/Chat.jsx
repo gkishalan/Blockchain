@@ -7,7 +7,7 @@ import { ChatAppContext } from "../context/ChatAppContext";
 import { FaSmile, FaPaperclip, FaPaperPlane, FaArrowLeft } from "react-icons/fa";
 
 const Chat = ({ functionName, readMessage, deleteMessage, friendMsg, account, userName, loading, currentUserName, currentUserAddress }) => {
-    const { clearCurrentChat } = useContext(ChatAppContext);
+    const { clearCurrentChat, setError } = useContext(ChatAppContext);
     const [message, setMessage] = useState("");
     const [chatData, setChatData] = useState({
         name: "",
@@ -24,6 +24,14 @@ const Chat = ({ functionName, readMessage, deleteMessage, friendMsg, account, us
         return (isImage && isUrl) || isDataUrl;
     };
 
+    const checkVideo = (msg) => {
+        return /^data:video\/(mp4|webm|ogg);base64,/.test(msg);
+    };
+
+    const checkDocument = (msg) => {
+        return /^data:application\/(pdf|msword|vnd.openxmlformats-officedocument.wordprocessingml.document);base64,/.test(msg);
+    };
+
     const router = useRouter();
 
     useEffect(() => {
@@ -34,30 +42,62 @@ const Chat = ({ functionName, readMessage, deleteMessage, friendMsg, account, us
 
     const [readUser, setReadUser] = useState("");
 
-    // File Upload Handler with Compression
+    // File Upload Handler with Compression for Images
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
-            reader.onload = (readerEvent) => {
-                const img = new window.Image();
-                img.onload = () => {
-                    const canvas = document.createElement("canvas");
-                    const MAX_WIDTH = 300; // Resize to small width for gas optimization
-                    const scaleSize = MAX_WIDTH / img.width;
-                    canvas.width = MAX_WIDTH;
-                    canvas.height = img.height * scaleSize;
 
-                    const ctx = canvas.getContext("2d");
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            // If it's an image, we can compress it
+            if (file.type.startsWith("image/")) {
+                // Determine max input size for images (e.g. 10MB) - we will compress it anyway
+                if (file.size > 10 * 1024 * 1024) {
+                    setError("Image is too large. Please select an image under 10MB.");
+                    e.target.value = "";
+                    return;
+                }
 
-                    // Compress to JPEG with 0.7 quality
-                    const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
-                    setMessage(dataUrl);
+                reader.onload = (readerEvent) => {
+                    const img = new window.Image();
+                    img.onload = () => {
+                        const canvas = document.createElement("canvas");
+                        const MAX_WIDTH = 500; // Increased resolution slightly
+                        const scaleSize = MAX_WIDTH / img.width;
+                        canvas.width = MAX_WIDTH;
+                        canvas.height = img.height * scaleSize;
+
+                        const ctx = canvas.getContext("2d");
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                        // Compress to JPEG 
+                        const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+
+                        // Check compressed size (limit ~100KB data URL length)
+                        if (dataUrl.length > 150000) { // approx 150KB char length ~ 110KB bytes
+                            setError("Compressed image is still too large for blockchain storage.");
+                            e.target.value = "";
+                        } else {
+                            setMessage(dataUrl);
+                        }
+                    };
+                    img.src = readerEvent.target.result;
                 };
-                img.src = readerEvent.target.result;
-            };
-            reader.readAsDataURL(file);
+                reader.readAsDataURL(file);
+
+            } else {
+                // For non-images (PDF, Video), strict checks
+                // Limit to 200KB to allow small docs, else reject
+                if (file.size > 200 * 1024) {
+                    setError("File is too large for blockchain. Please use files under 200KB.");
+                    e.target.value = "";
+                    return;
+                }
+
+                reader.onload = (readerEvent) => {
+                    setMessage(readerEvent.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
         }
     };
 
@@ -101,6 +141,23 @@ const Chat = ({ functionName, readMessage, deleteMessage, friendMsg, account, us
                                                 marginBottom: "0.5rem",
                                             }}
                                         />
+                                    ) : checkVideo(el.content) ? (
+                                        <video
+                                            src={el.content}
+                                            controls
+                                            style={{
+                                                maxWidth: "100%",
+                                                borderRadius: "10px",
+                                                marginBottom: "0.5rem",
+                                            }}
+                                        />
+                                    ) : checkDocument(el.content) ? (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                            <FaPaperclip />
+                                            <a download="document" href={el.content} style={{ color: 'inherit', textDecoration: 'underline' }}>
+                                                Download Document
+                                            </a>
+                                        </div>
                                     ) : (
                                         <p>{el.content}</p>
                                     )}
@@ -132,7 +189,7 @@ const Chat = ({ functionName, readMessage, deleteMessage, friendMsg, account, us
                                 type="file"
                                 id="fileInput"
                                 style={{ display: "none" }}
-                                accept="image/*"
+                                accept="image/*,video/*,.pdf,.doc,.docx"
                                 onChange={handleFileChange}
                             />
 

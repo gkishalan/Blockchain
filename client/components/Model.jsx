@@ -42,7 +42,7 @@ const Model = ({
                     ) : (
                         <div className="Model_box_right_name">
                             <div className="Model_box_right_name_info">
-                                <FaUser color="white" />
+                                <FaUser />
                                 <input
                                     type="text"
                                     placeholder="your name"
@@ -50,7 +50,7 @@ const Model = ({
                                 />
                             </div>
                             <div className="Model_box_right_name_info">
-                                <FaAddressCard color="white" />
+                                <FaAddressCard />
                                 <input
                                     type="text"
                                     placeholder={address || "Enter address.."}
