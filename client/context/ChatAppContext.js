@@ -144,6 +144,13 @@ export const ChatAppProvider = ({ children }) => {
         setCurrentUserAddress(userAddress);
     };
 
+    // Clear Chat (For Mobile Back Button)
+    const clearCurrentChat = () => {
+        setCurrentUserName("");
+        setCurrentUserAddress("");
+        setFriendMsg([]); // Optional: Clear messages too if desired
+    };
+
     // Delete Message removed as per user request
 
     return (
@@ -165,6 +172,7 @@ export const ChatAppProvider = ({ children }) => {
                 error,
                 currentUserName,
                 currentUserAddress,
+                clearCurrentChat,
             }}
         >
             {children}

@@ -29,12 +29,12 @@ const Home = () => {
       <Filter />
       <div className="Friend">
         <div className="Friend_box">
-          <div className="Friend_box_left">
+          <div className={`Friend_box_left ${currentUserName ? "mobile-hidden" : ""}`}>
             {friendLists.map((el, i) => (
               <Friend key={i + 1} el={el} i={i} readMessage={readMessage} readUser={readUser} />
             ))}
           </div>
-          <div className="Friend_box_right">
+          <div className={`Friend_box_right ${!currentUserName ? "mobile-hidden" : ""}`}>
             <Chat
               functionName={sendMessage}
               readMessage={readMessage}

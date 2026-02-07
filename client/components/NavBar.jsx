@@ -73,11 +73,14 @@ const NavBar = () => {
                     </div>
 
                     {/* Mobile */}
-                    {!open && (
+                    {open && (
                         <div className="mobile_menu">
                             {menuItems.map((el, i) => (
                                 <div
-                                    onClick={() => setActive(i + 1)}
+                                    onClick={() => {
+                                        setActive(i + 1);
+                                        setOpen(false); // Close menu on click
+                                    }}
                                     key={i + 1}
                                     className={`${active == i + 1 ? "mobile_menu_items_active" : "mobile_menu_items"}`}
                                 >

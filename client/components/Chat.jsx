@@ -4,9 +4,10 @@ import React, { useState, useEffect, useContext } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ChatAppContext } from "../context/ChatAppContext";
-import { FaSmile, FaPaperclip, FaPaperPlane } from "react-icons/fa";
+import { FaSmile, FaPaperclip, FaPaperPlane, FaArrowLeft } from "react-icons/fa";
 
 const Chat = ({ functionName, readMessage, deleteMessage, friendMsg, account, userName, loading, currentUserName, currentUserAddress }) => {
+    const { clearCurrentChat } = useContext(ChatAppContext);
     const [message, setMessage] = useState("");
     const [chatData, setChatData] = useState({
         name: "",
@@ -64,6 +65,9 @@ const Chat = ({ functionName, readMessage, deleteMessage, friendMsg, account, us
         <div className="Chat">
             {currentUserName && currentUserAddress ? (
                 <div className="Chat_user_info">
+                    <div className="mobile_back_btn" onClick={() => clearCurrentChat()}>
+                        <FaArrowLeft size={20} />
+                    </div>
                     <Image src="/assets/img1.png" alt="image" width={70} height={70} />
                     <div className="Chat_user_info_box">
                         <h4>{currentUserName}</h4>
@@ -137,21 +141,22 @@ const Chat = ({ functionName, readMessage, deleteMessage, friendMsg, account, us
                                 <FaPaperclip size={25} style={{ cursor: "pointer" }} />
                             </label>
 
+
+
                             {loading ? (
                                 <div className="Loader">
                                     <Image src="/assets/loader.gif" alt="loader" width={50} height={50} />
                                 </div>
                             ) : (
-                                <FaPaperPlane
-                                    size={25}
-                                    style={{ cursor: "pointer", color: "var(--primary-color)" }}
-                                    onClick={() => {
-                                        functionName({ msgAddress: currentUserAddress, msg: message });
-                                        setMessage(""); // Clear input after send
-                                    }}
-                                />
+                                <div className="send_icon" onClick={() => {
+                                    functionName({ msgAddress: currentUserAddress, msg: message });
+                                    setMessage("");
+                                }}>
+                                    <FaPaperPlane size={18} />
+                                </div>
                             )}
                         </div>
+
                     </div>
                 ) : (
                     ""
