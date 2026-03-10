@@ -123,7 +123,7 @@ export const ChatAppProvider = ({ children }) => {
             readMessage(msgAddress);
         } catch (error) {
             console.error("Error sending message:", error);
-            setError("Transaction failed. File might be too large (max ~100KB) or gas limit exceeded.");
+            setError("Transaction failed. Please check your wallet and try again.");
         }
     };
 

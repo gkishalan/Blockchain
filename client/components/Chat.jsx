@@ -18,18 +18,25 @@ const Chat = ({ functionName, readMessage, deleteMessage, friendMsg, account, us
     const [selectedMsgIndex, setSelectedMsgIndex] = useState(null);
 
     const checkImage = (msg) => {
-        const isImage = /\.(jpeg|jpg|gif|png|webp)$/i.test(msg);
-        const isUrl = /^(http|https):\/\//i.test(msg);
+        // Match image extensions in URLs (including /uploads/ paths)
+        const hasImageExt = /\.(jpeg|jpg|gif|png|webp)(\?.*)?$/i.test(msg);
+        const isUrl = /^(\/|http|https)/i.test(msg);
         const isDataUrl = /^data:image\/(jpeg|jpg|gif|png|webp);base64,/.test(msg);
-        return (isImage && isUrl) || isDataUrl;
+        return (hasImageExt && isUrl) || isDataUrl;
     };
 
     const checkVideo = (msg) => {
-        return /^data:video\/(mp4|webm|ogg);base64,/.test(msg);
+        const hasVideoExt = /\.(mp4|webm|ogg|mov|avi)(\?.*)?$/i.test(msg);
+        const isUrl = /^(\/|http|https)/i.test(msg);
+        const isDataUrl = /^data:video\/(mp4|webm|ogg);base64,/.test(msg);
+        return (hasVideoExt && isUrl) || isDataUrl;
     };
 
     const checkDocument = (msg) => {
-        return /^data:application\/(pdf|msword|vnd.openxmlformats-officedocument.wordprocessingml.document);base64,/.test(msg);
+        const hasDocExt = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt)(\?.*)?$/i.test(msg);
+        const isUrl = /^(\/|http|https)/i.test(msg);
+        const isDataUrl = /^data:application\/(pdf|msword|vnd\.openxmlformats)/i.test(msg);
+        return (hasDocExt && isUrl) || isDataUrl;
     };
 
     const router = useRouter();
@@ -42,62 +49,103 @@ const Chat = ({ functionName, readMessage, deleteMessage, friendMsg, account, us
 
     const [readUser, setReadUser] = useState("");
 
-    // File Upload Handler with Compression for Images
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
+    const [uploading, setUploading] = useState(false);
 
-            // If it's an image, we can compress it
+    // Upload a file (or blob) to local storage via our API route
+    const uploadFile = async (fileOrBlob) => {
+        const formData = new FormData();
+        formData.append("file", fileOrBlob);
+
+        const res = await fetch("/api/upload", {
+            method: "POST",
+            body: formData,
+        });
+
+        if (!res.ok) {
+            throw new Error("Upload failed");
+        }
+
+        const data = await res.json();
+        return data.url;
+    };
+
+    // File Upload Handler — uploads to IPFS, stores only the URL on-chain
+    const handleFileChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setUploading(true);
+
+        try {
             if (file.type.startsWith("image/")) {
-                // Determine max input size for images (e.g. 10MB) - we will compress it anyway
-                if (file.size > 10 * 1024 * 1024) {
-                    setError("Image is too large. Please select an image under 10MB.");
+                // Limit input to 20MB for images
+                if (file.size > 20 * 1024 * 1024) {
+                    setError("Image is too large. Please select an image under 20MB.");
                     e.target.value = "";
+                    setUploading(false);
                     return;
                 }
 
-                reader.onload = (readerEvent) => {
-                    const img = new window.Image();
-                    img.onload = () => {
-                        const canvas = document.createElement("canvas");
-                        const MAX_WIDTH = 500; // Increased resolution slightly
-                        const scaleSize = MAX_WIDTH / img.width;
-                        canvas.width = MAX_WIDTH;
-                        canvas.height = img.height * scaleSize;
+                // Compress image before uploading to save IPFS storage
+                const compressedBlob = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (readerEvent) => {
+                        const img = new window.Image();
+                        img.onload = () => {
+                            const canvas = document.createElement("canvas");
+                            const MAX_WIDTH = 800;
+                            const scale = Math.min(1, MAX_WIDTH / img.width);
+                            canvas.width = img.width * scale;
+                            canvas.height = img.height * scale;
 
-                        const ctx = canvas.getContext("2d");
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                            const ctx = canvas.getContext("2d");
+                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-                        // Compress to JPEG 
-                        const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
-
-                        // Check compressed size (limit ~100KB data URL length)
-                        if (dataUrl.length > 150000) { // approx 150KB char length ~ 110KB bytes
-                            setError("Compressed image is still too large for blockchain storage.");
-                            e.target.value = "";
-                        } else {
-                            setMessage(dataUrl);
-                        }
+                            canvas.toBlob(
+                                (blob) => resolve(blob),
+                                "image/jpeg",
+                                0.8
+                            );
+                        };
+                        img.onerror = reject;
+                        img.src = readerEvent.target.result;
                     };
-                    img.src = readerEvent.target.result;
-                };
-                reader.readAsDataURL(file);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+
+                const url = await uploadFile(
+                    new File([compressedBlob], file.name || "image.jpg", { type: "image/jpeg" })
+                );
+                setMessage(url);
+
+            } else if (file.type.startsWith("video/")) {
+                if (file.size > 50 * 1024 * 1024) {
+                    setError("Video is too large. Please select a video under 50MB.");
+                    e.target.value = "";
+                    setUploading(false);
+                    return;
+                }
+                const url = await uploadFile(file);
+                setMessage(url);
 
             } else {
-                // For non-images (PDF, Video), strict checks
-                // Limit to 200KB to allow small docs, else reject
-                if (file.size > 200 * 1024) {
-                    setError("File is too large for blockchain. Please use files under 200KB.");
+                // Documents (PDF, DOC, etc.)
+                if (file.size > 10 * 1024 * 1024) {
+                    setError("File is too large. Please select a file under 10MB.");
                     e.target.value = "";
+                    setUploading(false);
                     return;
                 }
-
-                reader.onload = (readerEvent) => {
-                    setMessage(readerEvent.target.result);
-                };
-                reader.readAsDataURL(file);
+                const url = await uploadFile(file);
+                setMessage(url);
             }
+        } catch (err) {
+            console.error("File upload error:", err);
+            setError("Failed to upload file. Please check your connection and try again.");
+        } finally {
+            setUploading(false);
+            e.target.value = "";
         }
     };
 
@@ -200,7 +248,7 @@ const Chat = ({ functionName, readMessage, deleteMessage, friendMsg, account, us
 
 
 
-                            {loading ? (
+                            {loading || uploading ? (
                                 <div className="Loader">
                                     <Image src="/assets/loader.gif" alt="loader" width={50} height={50} />
                                 </div>
