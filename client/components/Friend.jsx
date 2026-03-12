@@ -4,7 +4,7 @@ import React, { useContext } from "react";
 import Image from "next/image";
 import { ChatAppContext } from "../context/ChatAppContext";
 
-const Friend = ({ el, i, readMessage, readUser }) => {
+const Friend = ({ el, i, readMessage, readUser, unreadCount }) => {
     return (
         <div
             className="Friend_box_left_user"
@@ -22,7 +22,12 @@ const Friend = ({ el, i, readMessage, readUser }) => {
             />
             <div className="Friend_box_left_user_info">
                 <div className="Friend_box_left_user_info_name">
-                    <h4>{el.name}</h4>
+                    <div className="Friend_box_left_user_info_name_row">
+                        <h4>{el.name}</h4>
+                        {unreadCount > 0 && (
+                            <span className="unread_badge">{unreadCount}</span>
+                        )}
+                    </div>
                     <small>{el.pubkey.slice(0, 25)}..</small>
                 </div>
             </div>

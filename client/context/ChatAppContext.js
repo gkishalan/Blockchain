@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, createContext } from "react";
+import React, { useState, useEffect, useRef, useCallback, createContext } from "react";
 import { useRouter } from "next/navigation";
 import { ethers } from "ethers";
 import { ChatAppAddress, ChatAppABI } from "./constants";
@@ -17,6 +17,9 @@ export const ChatAppProvider = ({ children }) => {
     const [error, setError] = useState("");
     const [currentUserName, setCurrentUserName] = useState("");
     const [currentUserAddress, setCurrentUserAddress] = useState("");
+    const [unreadCounts, setUnreadCounts] = useState({});
+    const friendListsRef = useRef([]);
+    const accountRef = useRef("");
 
     const router = useRouter();
 
@@ -32,6 +35,8 @@ export const ChatAppProvider = ({ children }) => {
 
             const friendLists = await contract.getMyFriendList();
             setFriendLists(friendLists);
+            friendListsRef.current = friendLists;
+            accountRef.current = connectAccount;
 
             const userList = await contract.getAllAppUser();
             setUserLists(userList);
@@ -133,6 +138,14 @@ export const ChatAppProvider = ({ children }) => {
             const contract = await connectingWithContract();
             const read = await contract.readMessage(friendAddress);
             setFriendMsg(read);
+
+            // Mark messages as read by saving current count to localStorage
+            const acc = accountRef.current || account;
+            if (acc && friendAddress) {
+                const key = `lastSeen_${acc.toLowerCase()}_${friendAddress.toLowerCase()}`;
+                localStorage.setItem(key, read.length.toString());
+                setUnreadCounts((prev) => ({ ...prev, [friendAddress.toLowerCase()]: 0 }));
+            }
         } catch (error) {
             console.log("Currently you have no messages");
         }
@@ -152,6 +165,51 @@ export const ChatAppProvider = ({ children }) => {
         setCurrentUserAddress("");
         setFriendMsg([]); // Optional: Clear messages too if desired
     };
+
+    // Fetch unread counts for all friends
+    const fetchUnreadCounts = useCallback(async () => {
+        try {
+            const friends = friendListsRef.current;
+            const acc = accountRef.current;
+            if (!friends || friends.length === 0 || !acc) return;
+
+            const contract = await connectingWithContract();
+            const counts = {};
+
+            for (const friend of friends) {
+                try {
+                    const messages = await contract.readMessage(friend.pubkey);
+                    const totalCount = messages.length;
+                    const key = `lastSeen_${acc.toLowerCase()}_${friend.pubkey.toLowerCase()}`;
+                    const lastSeen = parseInt(localStorage.getItem(key) || "0", 10);
+                    counts[friend.pubkey.toLowerCase()] = Math.max(0, totalCount - lastSeen);
+                } catch (e) {
+                    counts[friend.pubkey.toLowerCase()] = 0;
+                }
+            }
+
+            setUnreadCounts(counts);
+        } catch (error) {
+            console.log("Error fetching unread counts:", error);
+        }
+    }, []);
+
+    // Poll for unread messages every 10 seconds
+    useEffect(() => {
+        // Initial fetch after a short delay to allow friendLists to load
+        const initialTimer = setTimeout(() => {
+            fetchUnreadCounts();
+        }, 2000);
+
+        const interval = setInterval(() => {
+            fetchUnreadCounts();
+        }, 10000);
+
+        return () => {
+            clearTimeout(initialTimer);
+            clearInterval(interval);
+        };
+    }, [fetchUnreadCounts]);
 
     // Delete Message removed as per user request
 
@@ -175,6 +233,7 @@ export const ChatAppProvider = ({ children }) => {
                 currentUserName,
                 currentUserAddress,
                 clearCurrentChat,
+                unreadCounts,
                 setError, // Expose setError for child components
             }}
         >

@@ -22,6 +22,7 @@ const Home = () => {
     error,
     currentUserName,
     currentUserAddress,
+    unreadCounts,
   } = useContext(ChatAppContext);
 
   return (
@@ -31,7 +32,14 @@ const Home = () => {
         <div className="Friend_box">
           <div className={`Friend_box_left ${currentUserName ? "mobile-hidden" : ""}`}>
             {friendLists.map((el, i) => (
-              <Friend key={i + 1} el={el} i={i} readMessage={readMessage} readUser={readUser} />
+              <Friend
+                key={i + 1}
+                el={el}
+                i={i}
+                readMessage={readMessage}
+                readUser={readUser}
+                unreadCount={unreadCounts[el.pubkey?.toLowerCase()] || 0}
+              />
             ))}
           </div>
           <div className={`Friend_box_right ${!currentUserName ? "mobile-hidden" : ""}`}>

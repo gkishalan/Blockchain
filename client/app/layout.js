@@ -1,7 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ChatAppProvider } from "../context/ChatAppContext";
-import NavBar from "../components/NavBar";
+import AppShell from "../components/AppShell";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Chat DApp",
-  description: "Blockchain Chat Application",
+  title: "BlockChat - Decentralized Messaging",
+  description: "Secure, decentralized chat application powered by Ethereum blockchain",
 };
 
 export default function RootLayout({ children }) {
@@ -23,8 +23,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <ChatAppProvider>
-          <NavBar />
-          {children}
+          <AppShell>{children}</AppShell>
         </ChatAppProvider>
       </body>
     </html>

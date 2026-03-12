@@ -88,6 +88,396 @@ button {
    COMPONENT STYLES
    ========================================= */
 
+/* --- Login Page --- */
+.LoginPage {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding: 2rem;
+}
+
+.LoginPage_bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.LoginPage_bg_orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.3;
+  animation: orbFloat 8s ease-in-out infinite;
+}
+
+.LoginPage_bg_orb1 {
+  width: 500px;
+  height: 500px;
+  background: var(--primary-color);
+  top: -10%;
+  left: -10%;
+  animation-delay: 0s;
+}
+
+.LoginPage_bg_orb2 {
+  width: 400px;
+  height: 400px;
+  background: var(--accent-color);
+  bottom: -10%;
+  right: -5%;
+  animation-delay: -3s;
+}
+
+.LoginPage_bg_orb3 {
+  width: 300px;
+  height: 300px;
+  background: var(--secondary-color);
+  top: 40%;
+  right: 30%;
+  animation-delay: -5s;
+}
+
+@keyframes orbFloat {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  33% {
+    transform: translate(30px, -30px) scale(1.05);
+  }
+
+  66% {
+    transform: translate(-20px, 20px) scale(0.95);
+  }
+}
+
+.LoginPage_container {
+  display: flex;
+  align-items: center;
+  gap: 4rem;
+  max-width: 1100px;
+  width: 100%;
+  z-index: 1;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Left Side */
+.LoginPage_left {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.LoginPage_left_content {
+  text-align: center;
+}
+
+.LoginPage_logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.LoginPage_logo h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.LoginPage_hero {
+  margin-bottom: 2.5rem;
+}
+
+.LoginPage_hero_img {
+  max-width: 320px;
+  height: auto;
+  filter: drop-shadow(0 0 40px rgba(99, 102, 241, 0.3));
+  animation: heroFloat 4s ease-in-out infinite;
+}
+
+@keyframes heroFloat {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+.LoginPage_features {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.LoginPage_feature {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.5rem 1rem;
+  border-radius: 99px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.LoginPage_feature svg {
+  color: var(--secondary-color);
+  font-size: 0.75rem;
+}
+
+/* Right Side */
+.LoginPage_right {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.LoginPage_form_card {
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 2rem;
+  padding: 3rem;
+  width: 100%;
+  max-width: 440px;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.4),
+    0 0 40px rgba(99, 102, 241, 0.08);
+}
+
+.LoginPage_form_header {
+  margin-bottom: 2.5rem;
+}
+
+.LoginPage_form_header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 0.8rem;
+}
+
+.LoginPage_form_header h1 span {
+  background: linear-gradient(to right, var(--secondary-color), var(--accent-color));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.LoginPage_form_header p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.LoginPage_form_step {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.LoginPage_step_badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--primary-color);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.35rem 0.9rem;
+  border-radius: 99px;
+  margin-bottom: 1.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.LoginPage_form_step h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.LoginPage_form_step>p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 1.8rem;
+}
+
+.LoginPage_input_group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 1rem 1.2rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 1rem;
+  transition: all 0.3s ease;
+}
+
+.LoginPage_input_group:focus-within {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.LoginPage_input_icon {
+  color: var(--primary-color);
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.LoginPage_input_group input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-color);
+  outline: none;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.LoginPage_input_group input::placeholder {
+  color: var(--text-muted);
+}
+
+.LoginPage_wallet_info {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(6, 182, 212, 0.08);
+  padding: 0.7rem 1rem;
+  border-radius: 0.75rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(6, 182, 212, 0.15);
+}
+
+.LoginPage_wallet_info small {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.LoginPage_wallet_info span {
+  color: var(--secondary-color) !important;
+  font-family: monospace;
+  font-size: 0.85rem;
+  -webkit-text-fill-color: var(--secondary-color) !important;
+  background: none !important;
+}
+
+/* Buttons */
+.LoginPage_btn {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  border-radius: 1rem;
+  border: none;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.LoginPage_btn_primary {
+  background: linear-gradient(135deg, var(--primary-color), #4f46e5);
+  color: white;
+  box-shadow: 0 0 25px rgba(99, 102, 241, 0.3);
+}
+
+.LoginPage_btn_primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 35px rgba(99, 102, 241, 0.5);
+}
+
+.LoginPage_btn_primary:active {
+  transform: translateY(0);
+}
+
+.LoginPage_btn_loading {
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
+.LoginPage_btn_loading:hover {
+  transform: none;
+}
+
+/* Error */
+.LoginPage_error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  padding: 0.8rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.85rem;
+  margin-top: 1rem;
+  text-align: center;
+}
+
+/* Footer */
+.LoginPage_footer {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.LoginPage_footer small {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+/* Login Page Responsive */
+@media screen and (max-width: 900px) {
+  .LoginPage_container {
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .LoginPage_left {
+    display: none;
+  }
+
+  .LoginPage_form_card {
+    padding: 2rem;
+  }
+
+  .LoginPage_form_header h1 {
+    font-size: 1.6rem;
+  }
+}
+
 /* --- NavBar --- */
 .NavBar {
   padding: 1.25rem 2rem;
@@ -318,6 +708,48 @@ button {
 .Friend_box_left_user_info_name small {
   color: var(--text-muted);
   font-size: 0.8rem;
+}
+
+/* --- Name Row (name + badge side by side) --- */
+.Friend_box_left_user_info_name_row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* --- Unread Message Badge --- */
+.unread_badge {
+  background: linear-gradient(135deg, var(--primary-color), #4f46e5);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 7px;
+  border-radius: 99px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.5);
+  animation: badgePop 0.3s ease-out;
+  letter-spacing: 0.02em;
+}
+
+@keyframes badgePop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+
+  60% {
+    transform: scale(1.2);
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* Right Content (Chat Area) */
