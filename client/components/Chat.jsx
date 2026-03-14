@@ -7,7 +7,7 @@ import { ChatAppContext } from "../context/ChatAppContext";
 import { FaSmile, FaPaperclip, FaPaperPlane, FaArrowLeft } from "react-icons/fa";
 
 const Chat = ({ functionName, readMessage, deleteMessage, friendMsg, account, userName, loading, currentUserName, currentUserAddress }) => {
-    const { clearCurrentChat, setError } = useContext(ChatAppContext);
+    const { clearCurrentChat, setError, readStatusMap } = useContext(ChatAppContext);
     const [message, setMessage] = useState("");
     const [chatData, setChatData] = useState({
         name: "",
@@ -46,6 +46,62 @@ const Chat = ({ functionName, readMessage, deleteMessage, friendMsg, account, us
         // const { name, address } = router.query;
         // setChatData({ name, address });
     }, []);
+
+    // Determine message status: 'sent', 'delivered', or 'read'
+    const getMessageStatus = (msgIndex) => {
+        if (!currentUserAddress) return 'sent';
+        const friendAddr = currentUserAddress.toLowerCase();
+        const statusInfo = readStatusMap[friendAddr];
+        if (!statusInfo) return 'sent';
+
+        // msgIndex is 0-based, friendLastSeen is a count (1-based length)
+        const messagePosition = msgIndex + 1;
+
+        if (statusInfo.friendLastSeen >= messagePosition) {
+            return 'read';
+        }
+        // If friend has fetched messages at all (totalMessages > 0 means they exist on chain)
+        // and the message is within total, it's at least "delivered" (on-chain)
+        if (statusInfo.totalMessages >= messagePosition) {
+            return 'delivered';
+        }
+        return 'sent';
+    };
+
+    // MessageStatus tick mark component
+    const MessageStatus = ({ status }) => {
+        if (status === 'read') {
+            // Double cyan ticks
+            return (
+                <span className="msg_status msg_status_read" title="Read">
+                    <svg width="20" height="14" viewBox="0 0 16 11" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M11.071 0.653a0.457 0.457 0 0 0-0.637 0.056L5.435 6.652 2.684 4.2a0.457 0.457 0 0 0-0.636 0.056 0.457 0.457 0 0 0 0.056 0.636L5.155 7.67a0.457 0.457 0 0 0 0.636-0.056l5.336-6.324a0.457 0.457 0 0 0-0.056-0.637z" fill="currentColor"/>
+                        <path d="M14.071 0.653a0.457 0.457 0 0 0-0.637 0.056L8.435 6.652 7.5 5.8" stroke="currentColor" strokeWidth="0.9" fill="none" strokeLinecap="round"/>
+                        <path d="M14.071 0.653a0.457 0.457 0 0 0-0.637 0.056L8.435 6.652 5.684 4.2a0.457 0.457 0 0 0-0.636 0.056 0.457 0.457 0 0 0 0.056 0.636L8.155 7.67a0.457 0.457 0 0 0 0.636-0.056l5.336-6.324a0.457 0.457 0 0 0-0.056-0.637z" fill="currentColor"/>
+                    </svg>
+                </span>
+            );
+        }
+        if (status === 'delivered') {
+            // Double grey ticks
+            return (
+                <span className="msg_status msg_status_delivered" title="Delivered">
+                    <svg width="20" height="14" viewBox="0 0 16 11" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M11.071 0.653a0.457 0.457 0 0 0-0.637 0.056L5.435 6.652 2.684 4.2a0.457 0.457 0 0 0-0.636 0.056 0.457 0.457 0 0 0 0.056 0.636L5.155 7.67a0.457 0.457 0 0 0 0.636-0.056l5.336-6.324a0.457 0.457 0 0 0-0.056-0.637z" fill="currentColor"/>
+                        <path d="M14.071 0.653a0.457 0.457 0 0 0-0.637 0.056L8.435 6.652 5.684 4.2a0.457 0.457 0 0 0-0.636 0.056 0.457 0.457 0 0 0 0.056 0.636L8.155 7.67a0.457 0.457 0 0 0 0.636-0.056l5.336-6.324a0.457 0.457 0 0 0-0.056-0.637z" fill="currentColor"/>
+                    </svg>
+                </span>
+            );
+        }
+        // Single grey tick (sent)
+        return (
+            <span className="msg_status msg_status_sent" title="Sent">
+                <svg width="16" height="14" viewBox="0 0 12 11" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M11.071 0.653a0.457 0.457 0 0 0-0.637 0.056L5.435 6.652 2.684 4.2a0.457 0.457 0 0 0-0.636 0.056 0.457 0.457 0 0 0 0.056 0.636L5.155 7.67a0.457 0.457 0 0 0 0.636-0.056l5.336-6.324a0.457 0.457 0 0 0-0.056-0.637z" fill="currentColor"/>
+                </svg>
+            </span>
+        );
+    };
 
     const [readUser, setReadUser] = useState("");
 
@@ -214,6 +270,9 @@ const Chat = ({ functionName, readMessage, deleteMessage, friendMsg, account, us
                                             hour: "2-digit",
                                             minute: "2-digit",
                                         })}
+                                        {el.sender.toLowerCase() === account.toLowerCase() && (
+                                            <MessageStatus status={getMessageStatus(i)} />
+                                        )}
                                     </small>
                                 </div>
                             </div>

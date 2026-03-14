@@ -18,6 +18,7 @@ export const ChatAppProvider = ({ children }) => {
     const [currentUserName, setCurrentUserName] = useState("");
     const [currentUserAddress, setCurrentUserAddress] = useState("");
     const [unreadCounts, setUnreadCounts] = useState({});
+    const [readStatusMap, setReadStatusMap] = useState({});
     const friendListsRef = useRef([]);
     const accountRef = useRef("");
 
@@ -166,7 +167,7 @@ export const ChatAppProvider = ({ children }) => {
         setFriendMsg([]); // Optional: Clear messages too if desired
     };
 
-    // Fetch unread counts for all friends
+    // Fetch unread counts for all friends + build read status map
     const fetchUnreadCounts = useCallback(async () => {
         try {
             const friends = friendListsRef.current;
@@ -175,6 +176,7 @@ export const ChatAppProvider = ({ children }) => {
 
             const contract = await connectingWithContract();
             const counts = {};
+            const statusMap = {};
 
             for (const friend of friends) {
                 try {
@@ -183,12 +185,23 @@ export const ChatAppProvider = ({ children }) => {
                     const key = `lastSeen_${acc.toLowerCase()}_${friend.pubkey.toLowerCase()}`;
                     const lastSeen = parseInt(localStorage.getItem(key) || "0", 10);
                     counts[friend.pubkey.toLowerCase()] = Math.max(0, totalCount - lastSeen);
+
+                    // Build read status: check what the FRIEND has last seen
+                    // The friend stores their lastSeen as: lastSeen_<friend>_<me>
+                    const friendSeenKey = `lastSeen_${friend.pubkey.toLowerCase()}_${acc.toLowerCase()}`;
+                    const friendLastSeen = parseInt(localStorage.getItem(friendSeenKey) || "0", 10);
+                    statusMap[friend.pubkey.toLowerCase()] = {
+                        totalMessages: totalCount,
+                        friendLastSeen: friendLastSeen,
+                    };
                 } catch (e) {
                     counts[friend.pubkey.toLowerCase()] = 0;
+                    statusMap[friend.pubkey.toLowerCase()] = { totalMessages: 0, friendLastSeen: 0 };
                 }
             }
 
             setUnreadCounts(counts);
+            setReadStatusMap(statusMap);
         } catch (error) {
             console.log("Error fetching unread counts:", error);
         }
@@ -234,6 +247,7 @@ export const ChatAppProvider = ({ children }) => {
                 currentUserAddress,
                 clearCurrentChat,
                 unreadCounts,
+                readStatusMap,
                 setError, // Expose setError for child components
             }}
         >
