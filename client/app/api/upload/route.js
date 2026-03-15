@@ -1,7 +1,4 @@
 import { NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
-import { randomBytes } from "crypto";
 
 export async function POST(request) {
     try {
@@ -15,25 +12,65 @@ export async function POST(request) {
             );
         }
 
-        // Read the file into a Buffer
-        const bytes = await file.arrayBuffer();
-        const buffer = Buffer.from(bytes);
+        const PINATA_JWT = process.env.PINATA_JWT;
+        const GATEWAY = process.env.NEXT_PUBLIC_PINATA_GATEWAY;
 
-        // Build a unique filename: timestamp + random hex + original extension
-        const ext = path.extname(file.name || "file") || ".bin";
-        const uniqueName = `${Date.now()}_${randomBytes(6).toString("hex")}${ext}`;
+        if (!PINATA_JWT || PINATA_JWT === "your_pinata_jwt_token_here") {
+            return NextResponse.json(
+                { error: "Pinata JWT is not configured. Please add your Pinata JWT to .env.local" },
+                { status: 500 }
+            );
+        }
 
-        // Ensure the uploads directory exists inside public/
-        const uploadsDir = path.join(process.cwd(), "public", "uploads");
-        await mkdir(uploadsDir, { recursive: true });
+        // Build the FormData for Pinata V1 Pinning API
+        const pinataFormData = new FormData();
+        pinataFormData.append("file", file);
 
-        // Write the file
-        const filePath = path.join(uploadsDir, uniqueName);
-        await writeFile(filePath, buffer);
+        // Optional: add metadata (file name)
+        const pinataMetadata = JSON.stringify({
+            name: file.name || "uploaded-file",
+        });
+        pinataFormData.append("pinataMetadata", pinataMetadata);
 
-        // Return the public URL (Next.js serves public/ at the root)
-        const url = `/uploads/${uniqueName}`;
-        return NextResponse.json({ url });
+        // Upload & pin to IPFS via Pinata V1 Pinning API
+        // This endpoint directly pins the file to IPFS, making it
+        // accessible via any IPFS gateway including the dedicated one
+        const pinataRes = await fetch("https://api.pinata.cloud/pinning/pinFileToIPFS", {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${PINATA_JWT}`,
+            },
+            body: pinataFormData,
+        });
+
+        if (!pinataRes.ok) {
+            const errorText = await pinataRes.text();
+            console.error("Pinata upload failed:", pinataRes.status, errorText);
+            return NextResponse.json(
+                { error: `Pinata upload failed: ${pinataRes.status}` },
+                { status: 502 }
+            );
+        }
+
+        const pinataData = await pinataRes.json();
+
+        // V1 Pinning API returns: { IpfsHash: "Qm..." or "bafy...", PinSize, Timestamp }
+        const ipfsHash = pinataData?.IpfsHash;
+
+        if (!ipfsHash) {
+            console.error("No IPFS hash returned from Pinata:", pinataData);
+            return NextResponse.json(
+                { error: "Failed to get IPFS hash from Pinata" },
+                { status: 502 }
+            );
+        }
+
+        // Build the public gateway URL
+        // Format: https://<gateway>/ipfs/<IpfsHash>
+        const gatewayDomain = GATEWAY || "gateway.pinata.cloud";
+        const url = `https://${gatewayDomain}/ipfs/${ipfsHash}`;
+
+        return NextResponse.json({ url, cid: ipfsHash });
     } catch (error) {
         console.error("Upload error:", error);
         return NextResponse.json(

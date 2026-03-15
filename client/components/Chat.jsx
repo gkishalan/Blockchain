@@ -1,24 +1,31 @@
 "use client";
 
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ChatAppContext } from "../context/ChatAppContext";
-import { FaSmile, FaPaperclip, FaPaperPlane, FaArrowLeft } from "react-icons/fa";
+import { FaSmile, FaPaperclip, FaPaperPlane, FaArrowLeft, FaCopy, FaTrash, FaBan, FaTimes } from "react-icons/fa";
 
-const Chat = ({ functionName, readMessage, deleteMessage, friendMsg, account, userName, loading, currentUserName, currentUserAddress }) => {
-    const { clearCurrentChat, setError, readStatusMap } = useContext(ChatAppContext);
+const Chat = ({ functionName, readMessage, friendMsg, account, userName, loading, currentUserName, currentUserAddress }) => {
+    const { clearCurrentChat, setError, readStatusMap, deleteMessage, hideMessageForMe, getHiddenMessages } = useContext(ChatAppContext);
     const [message, setMessage] = useState("");
     const [chatData, setChatData] = useState({
         name: "",
         address: "",
     });
 
-    // State to track which message is selected for deletion
-    const [selectedMsgIndex, setSelectedMsgIndex] = useState(null);
+    // Context menu state
+    const [contextMenu, setContextMenu] = useState({ visible: false, msgIndex: null, x: 0, y: 0 });
+    const contextMenuRef = useRef(null);
+
+    // Check if a message is an IPFS gateway URL (Pinata gateway endpoint)
+    const isIpfsUrl = (msg) => {
+        return /^https?:\/\/.*\.(mypinata\.cloud|pinata\.cloud)\/(ipfs|files)\//i.test(msg) ||
+               /^ipfs:\/\//i.test(msg);
+    };
 
     const checkImage = (msg) => {
-        // Match image extensions in URLs (including /uploads/ paths)
         const hasImageExt = /\.(jpeg|jpg|gif|png|webp)(\?.*)?$/i.test(msg);
         const isUrl = /^(\/|http|https)/i.test(msg);
         const isDataUrl = /^data:image\/(jpeg|jpg|gif|png|webp);base64,/.test(msg);
@@ -39,13 +46,22 @@ const Chat = ({ functionName, readMessage, deleteMessage, friendMsg, account, us
         return (hasDocExt && isUrl) || isDataUrl;
     };
 
+    const isMediaOrFile = (msg) => checkImage(msg) || checkVideo(msg) || checkDocument(msg) || isIpfsUrl(msg);
+
     const router = useRouter();
 
+    // Close context menu on outside click
     useEffect(() => {
-        // if (!router.isReady) return;
-        // const { name, address } = router.query;
-        // setChatData({ name, address });
-    }, []);
+        const handleClickOutside = (e) => {
+            if (contextMenuRef.current && !contextMenuRef.current.contains(e.target)) {
+                setContextMenu({ visible: false, msgIndex: null, x: 0, y: 0 });
+            }
+        };
+        if (contextMenu.visible) {
+            document.addEventListener("mousedown", handleClickOutside);
+        }
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [contextMenu.visible]);
 
     // Determine message status: 'sent', 'delivered', or 'read'
     const getMessageStatus = (msgIndex) => {
@@ -54,14 +70,11 @@ const Chat = ({ functionName, readMessage, deleteMessage, friendMsg, account, us
         const statusInfo = readStatusMap[friendAddr];
         if (!statusInfo) return 'sent';
 
-        // msgIndex is 0-based, friendLastSeen is a count (1-based length)
         const messagePosition = msgIndex + 1;
 
         if (statusInfo.friendLastSeen >= messagePosition) {
             return 'read';
         }
-        // If friend has fetched messages at all (totalMessages > 0 means they exist on chain)
-        // and the message is within total, it's at least "delivered" (on-chain)
         if (statusInfo.totalMessages >= messagePosition) {
             return 'delivered';
         }
@@ -71,7 +84,6 @@ const Chat = ({ functionName, readMessage, deleteMessage, friendMsg, account, us
     // MessageStatus tick mark component
     const MessageStatus = ({ status }) => {
         if (status === 'read') {
-            // Double cyan ticks
             return (
                 <span className="msg_status msg_status_read" title="Read">
                     <svg width="20" height="14" viewBox="0 0 16 11" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -83,7 +95,6 @@ const Chat = ({ functionName, readMessage, deleteMessage, friendMsg, account, us
             );
         }
         if (status === 'delivered') {
-            // Double grey ticks
             return (
                 <span className="msg_status msg_status_delivered" title="Delivered">
                     <svg width="20" height="14" viewBox="0 0 16 11" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -93,7 +104,6 @@ const Chat = ({ functionName, readMessage, deleteMessage, friendMsg, account, us
                 </span>
             );
         }
-        // Single grey tick (sent)
         return (
             <span className="msg_status msg_status_sent" title="Sent">
                 <svg width="16" height="14" viewBox="0 0 12 11" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -104,10 +114,9 @@ const Chat = ({ functionName, readMessage, deleteMessage, friendMsg, account, us
     };
 
     const [readUser, setReadUser] = useState("");
-
     const [uploading, setUploading] = useState(false);
 
-    // Upload a file (or blob) to local storage via our API route
+    // Upload a file to Pinata IPFS via our API route
     const uploadFile = async (fileOrBlob) => {
         const formData = new FormData();
         formData.append("file", fileOrBlob);
@@ -125,7 +134,7 @@ const Chat = ({ functionName, readMessage, deleteMessage, friendMsg, account, us
         return data.url;
     };
 
-    // File Upload Handler — uploads to IPFS, stores only the URL on-chain
+    // File Upload Handler
     const handleFileChange = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -134,7 +143,6 @@ const Chat = ({ functionName, readMessage, deleteMessage, friendMsg, account, us
 
         try {
             if (file.type.startsWith("image/")) {
-                // Limit input to 20MB for images
                 if (file.size > 20 * 1024 * 1024) {
                     setError("Image is too large. Please select an image under 20MB.");
                     e.target.value = "";
@@ -142,7 +150,6 @@ const Chat = ({ functionName, readMessage, deleteMessage, friendMsg, account, us
                     return;
                 }
 
-                // Compress image before uploading to save IPFS storage
                 const compressedBlob = await new Promise((resolve, reject) => {
                     const reader = new FileReader();
                     reader.onload = (readerEvent) => {
@@ -186,7 +193,6 @@ const Chat = ({ functionName, readMessage, deleteMessage, friendMsg, account, us
                 setMessage(url);
 
             } else {
-                // Documents (PDF, DOC, etc.)
                 if (file.size > 10 * 1024 * 1024) {
                     setError("File is too large. Please select a file under 10MB.");
                     e.target.value = "";
@@ -205,128 +211,260 @@ const Chat = ({ functionName, readMessage, deleteMessage, friendMsg, account, us
         }
     };
 
+    // --- Context Menu Handlers ---
+    const handleMessageClick = (e, msgIndex) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const rect = e.currentTarget.getBoundingClientRect();
+        const isSender = friendMsg[msgIndex]?.sender?.toLowerCase() === account.toLowerCase();
+        setContextMenu({
+            visible: true,
+            msgIndex,
+            isSender,
+            x: isSender ? rect.right : rect.left,
+            y: rect.top,
+        });
+    };
+
+    const closeContextMenu = () => {
+        setContextMenu({ visible: false, msgIndex: null, x: 0, y: 0 });
+    };
+
+    const handleCopy = (content) => {
+        if (content) {
+            navigator.clipboard.writeText(content);
+        }
+        closeContextMenu();
+    };
+
+    const handleDeleteForEveryone = async (msgIndex, content) => {
+        closeContextMenu();
+        if (!window.confirm("Delete this message for everyone? This cannot be undone.")) return;
+        await deleteMessage({
+            friendAddress: currentUserAddress,
+            msgIndex,
+            messageContent: content,
+        });
+    };
+
+    const handleDeleteForMe = (msgIndex) => {
+        closeContextMenu();
+        hideMessageForMe(currentUserAddress, msgIndex);
+    };
+
+    // Get hidden messages for current chat
+    const hiddenMsgIndices = currentUserAddress ? getHiddenMessages(currentUserAddress) : [];
+
+    // Render message content
+    const renderMessageContent = (content) => {
+        if (!content || content === "") {
+            return (
+                <p className="deleted_message">
+                    <FaBan style={{ marginRight: '0.4rem', opacity: 0.7 }} />
+                    This message was deleted
+                </p>
+            );
+        }
+
+        if (checkImage(content)) {
+            return (
+                <img
+                    src={content}
+                    alt="Sent image"
+                    style={{ maxWidth: "100%", borderRadius: "10px", marginBottom: "0.5rem" }}
+                />
+            );
+        }
+        if (checkVideo(content)) {
+            return (
+                <video
+                    src={content}
+                    controls
+                    style={{ maxWidth: "100%", borderRadius: "10px", marginBottom: "0.5rem" }}
+                />
+            );
+        }
+        if (checkDocument(content)) {
+            return (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    <FaPaperclip />
+                    <a download="document" href={content} style={{ color: 'inherit', textDecoration: 'underline' }}>
+                        Download Document
+                    </a>
+                </div>
+            );
+        }
+        if (isIpfsUrl(content)) {
+            return (
+                <div className="ipfs_file_container" style={{ marginBottom: '0.5rem' }}>
+                    <img
+                        src={content}
+                        alt="IPFS file"
+                        style={{ maxWidth: "100%", borderRadius: "10px" }}
+                        onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                        }}
+                    />
+                    <div style={{ display: 'none', alignItems: 'center', gap: '0.5rem' }}>
+                        <FaPaperclip />
+                        <a href={content} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>
+                            View IPFS File
+                        </a>
+                    </div>
+                </div>
+            );
+        }
+        return <p>{content}</p>;
+    };
+
     return (
-        <div className="Chat">
-            {currentUserName && currentUserAddress ? (
-                <div className="Chat_user_info">
-                    <div className="mobile_back_btn" onClick={() => clearCurrentChat()}>
-                        <FaArrowLeft size={20} />
-                    </div>
-                    <Image src="/assets/img1.png" alt="image" width={70} height={70} />
-                    <div className="Chat_user_info_box">
-                        <h4>{currentUserName}</h4>
-                        <p className="show">{currentUserAddress}</p>
-                    </div>
-                </div>
-            ) : (
-                ""
-            )}
-
-            <div className="Chat_box_box">
-                <div className="Chat_box">
-                    <div className="Chat_box_left">
-                        {friendMsg.map((el, i) => (
-                            <div
-                                key={i + 1}
-                                className={
-                                    el.sender.toLowerCase() === account.toLowerCase()
-                                        ? "chat_message_right"
-                                        : "chat_message_left"
-                                }
-                            >
-                                <div className="chat_message_box">
-                                    {checkImage(el.content) ? (
-                                        <img
-                                            src={el.content}
-                                            alt="Sent image"
-                                            style={{
-                                                maxWidth: "100%",
-                                                borderRadius: "10px",
-                                                marginBottom: "0.5rem",
-                                            }}
-                                        />
-                                    ) : checkVideo(el.content) ? (
-                                        <video
-                                            src={el.content}
-                                            controls
-                                            style={{
-                                                maxWidth: "100%",
-                                                borderRadius: "10px",
-                                                marginBottom: "0.5rem",
-                                            }}
-                                        />
-                                    ) : checkDocument(el.content) ? (
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                                            <FaPaperclip />
-                                            <a download="document" href={el.content} style={{ color: 'inherit', textDecoration: 'underline' }}>
-                                                Download Document
-                                            </a>
-                                        </div>
-                                    ) : (
-                                        <p>{el.content}</p>
-                                    )}
-                                    <small>
-                                        {new Date(Number(el.timestamp) * 1000).toLocaleTimeString([], {
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                        })}
-                                        {el.sender.toLowerCase() === account.toLowerCase() && (
-                                            <MessageStatus status={getMessageStatus(i)} />
-                                        )}
-                                    </small>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
+        <>
+            <div className="Chat">
                 {currentUserName && currentUserAddress ? (
-                    <div className="Chat_box_send">
-                        <div className="Chat_box_send_img">
-                            <FaSmile size={25} style={{ cursor: "pointer" }} />
-                            <input
-                                type="text"
-                                placeholder="Type your message"
-                                value={message} // Controlled input
-                                onChange={(e) => setMessage(e.target.value)}
-                            />
-
-                            {/* Hidden File Input */}
-                            <input
-                                type="file"
-                                id="fileInput"
-                                style={{ display: "none" }}
-                                accept="image/*,video/*,.pdf,.doc,.docx"
-                                onChange={handleFileChange}
-                            />
-
-                            {/* Paperclip Trigger */}
-                            <label htmlFor="fileInput">
-                                <FaPaperclip size={25} style={{ cursor: "pointer" }} />
-                            </label>
-
-
-
-                            {loading || uploading ? (
-                                <div className="Loader">
-                                    <Image src="/assets/loader.gif" alt="loader" width={50} height={50} />
-                                </div>
-                            ) : (
-                                <div className="send_icon" onClick={() => {
-                                    functionName({ msgAddress: currentUserAddress, msg: message });
-                                    setMessage("");
-                                }}>
-                                    <FaPaperPlane size={18} />
-                                </div>
-                            )}
+                    <div className="Chat_user_info">
+                        <div className="mobile_back_btn" onClick={() => clearCurrentChat()}>
+                            <FaArrowLeft size={20} />
                         </div>
-
+                        <Image src="/assets/img1.png" alt="image" width={70} height={70} />
+                        <div className="Chat_user_info_box">
+                            <h4>{currentUserName}</h4>
+                            <p className="show">{currentUserAddress}</p>
+                        </div>
                     </div>
                 ) : (
                     ""
                 )}
+
+                <div className="Chat_box_box">
+                    <div className="Chat_box">
+                        <div className="Chat_box_left">
+                            {friendMsg.map((el, i) => {
+                                if (hiddenMsgIndices.includes(i)) return null;
+
+                                const isSender = el.sender.toLowerCase() === account.toLowerCase();
+                                const isDeleted = !el.content || el.content === "";
+
+                                return (
+                                    <div
+                                        key={i + 1}
+                                        className={isSender ? "chat_message_right" : "chat_message_left"}
+                                    >
+                                        <div
+                                            className={`chat_message_box ${contextMenu.visible && contextMenu.msgIndex === i ? 'chat_message_selected' : ''}`}
+                                            onClick={(e) => !isDeleted && handleMessageClick(e, i)}
+                                            style={{ cursor: isDeleted ? 'default' : 'pointer' }}
+                                        >
+                                            {renderMessageContent(el.content)}
+                                            <small>
+                                                {new Date(Number(el.timestamp) * 1000).toLocaleTimeString([], {
+                                                    hour: "2-digit",
+                                                    minute: "2-digit",
+                                                })}
+                                                {isSender && !isDeleted && (
+                                                    <MessageStatus status={getMessageStatus(i)} />
+                                                )}
+                                            </small>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {currentUserName && currentUserAddress ? (
+                        <div className="Chat_box_send">
+                            <div className="Chat_box_send_img">
+                                <FaSmile size={25} style={{ cursor: "pointer" }} />
+                                <input
+                                    type="text"
+                                    placeholder="Type your message"
+                                    value={message}
+                                    onChange={(e) => setMessage(e.target.value)}
+                                />
+
+                                <input
+                                    type="file"
+                                    id="fileInput"
+                                    style={{ display: "none" }}
+                                    accept="image/*,video/*,.pdf,.doc,.docx"
+                                    onChange={handleFileChange}
+                                />
+
+                                <label htmlFor="fileInput">
+                                    <FaPaperclip size={25} style={{ cursor: "pointer" }} />
+                                </label>
+
+                                {loading || uploading ? (
+                                    <div className="Loader">
+                                        <Image src="/assets/loader.gif" alt="loader" width={50} height={50} />
+                                    </div>
+                                ) : (
+                                    <div className="send_icon" onClick={() => {
+                                        functionName({ msgAddress: currentUserAddress, msg: message });
+                                        setMessage("");
+                                    }}>
+                                        <FaPaperPlane size={18} />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ) : (
+                        ""
+                    )}
+                </div>
             </div>
-        </div>
+
+            {/* Context Menu — rendered via Portal on document.body to escape backdrop-filter */}
+            {contextMenu.visible && contextMenu.msgIndex !== null && typeof document !== 'undefined' && createPortal(
+                <>
+                    <div className="context_menu_overlay" onClick={closeContextMenu} />
+                    <div
+                        ref={contextMenuRef}
+                        className="context_menu"
+                        style={{
+                            top: `${Math.max(10, contextMenu.y - 120)}px`,
+                            left: `${contextMenu.isSender
+                                ? Math.max(10, contextMenu.x - 210)
+                                : Math.min(contextMenu.x, window.innerWidth - 220)
+                            }px`,
+                        }}
+                    >
+                        <div className="context_menu_header">
+                            <span>Message Options</span>
+                            <FaTimes className="context_menu_close" onClick={closeContextMenu} />
+                        </div>
+
+                        <button
+                            className="context_menu_item"
+                            onClick={() => handleCopy(friendMsg[contextMenu.msgIndex]?.content)}
+                        >
+                            <FaCopy />
+                            <span>Copy</span>
+                        </button>
+
+                        {friendMsg[contextMenu.msgIndex]?.sender?.toLowerCase() === account.toLowerCase() ? (
+                            <button
+                                className="context_menu_item context_menu_item_danger"
+                                onClick={() => handleDeleteForEveryone(contextMenu.msgIndex, friendMsg[contextMenu.msgIndex]?.content)}
+                            >
+                                <FaTrash />
+                                <span>Delete for Everyone</span>
+                            </button>
+                        ) : (
+                            <button
+                                className="context_menu_item context_menu_item_danger"
+                                onClick={() => handleDeleteForMe(contextMenu.msgIndex)}
+                            >
+                                <FaTrash />
+                                <span>Delete for Me</span>
+                            </button>
+                        )}
+                    </div>
+                </>,
+                document.body
+            )}
+        </>
     );
 };
 

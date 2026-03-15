@@ -224,7 +224,83 @@ export const ChatAppProvider = ({ children }) => {
         };
     }, [fetchUnreadCounts]);
 
-    // Delete Message removed as per user request
+    // --- Hidden messages state (for "Delete for Me") ---
+    const [hiddenMessages, setHiddenMessages] = useState({});
+
+    // Load hidden messages from localStorage
+    useEffect(() => {
+        if (!account) return;
+        const key = `hiddenMsgs_${account.toLowerCase()}`;
+        const stored = localStorage.getItem(key);
+        if (stored) {
+            try {
+                setHiddenMessages(JSON.parse(stored));
+            } catch (e) {
+                console.log("Error parsing hidden messages");
+            }
+        }
+    }, [account]);
+
+    // Delete message on-chain (sender only — deletes for everyone)
+    const deleteMessage = async ({ friendAddress, msgIndex, messageContent }) => {
+        try {
+            const contract = await connectingWithContract();
+            const deleteTx = await contract.deleteMessage(friendAddress, msgIndex);
+            setLoading(true);
+            await deleteTx.wait();
+            setLoading(false);
+
+            // If the message was an IPFS file, unpin it from Pinata
+            if (messageContent && /\.(mypinata\.cloud|pinata\.cloud)\/(ipfs|files)\//i.test(messageContent)) {
+                try {
+                    // Extract CID from URL: https://gateway/ipfs/CID
+                    const cidMatch = messageContent.match(/\/(ipfs|files)\/([a-zA-Z0-9]+)/);
+                    if (cidMatch && cidMatch[2]) {
+                        await fetch("/api/unpin", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ cid: cidMatch[2] }),
+                        });
+                    }
+                } catch (unpinErr) {
+                    console.log("File unpin warning:", unpinErr);
+                    // Non-fatal — on-chain delete already succeeded
+                }
+            }
+
+            // Refresh messages
+            await readMessage(friendAddress);
+        } catch (error) {
+            console.error("Error deleting message:", error);
+            setError("Failed to delete message. Please try again.");
+            setLoading(false);
+        }
+    };
+
+    // Hide message for me only (receiver side — localStorage)
+    const hideMessageForMe = (friendAddress, msgIndex) => {
+        const acc = account.toLowerCase();
+        const chatKey = `${acc}_${friendAddress.toLowerCase()}`;
+        const key = `hiddenMsgs_${acc}`;
+
+        const updated = { ...hiddenMessages };
+        if (!updated[chatKey]) {
+            updated[chatKey] = [];
+        }
+        if (!updated[chatKey].includes(msgIndex)) {
+            updated[chatKey].push(msgIndex);
+        }
+
+        setHiddenMessages(updated);
+        localStorage.setItem(key, JSON.stringify(updated));
+    };
+
+    // Get hidden message indices for a specific chat
+    const getHiddenMessages = (friendAddress) => {
+        if (!account || !friendAddress) return [];
+        const chatKey = `${account.toLowerCase()}_${friendAddress.toLowerCase()}`;
+        return hiddenMessages[chatKey] || [];
+    };
 
     return (
         <ChatAppContext.Provider
@@ -233,6 +309,9 @@ export const ChatAppProvider = ({ children }) => {
                 createAccount,
                 addFriends,
                 sendMessage,
+                deleteMessage,
+                hideMessageForMe,
+                getHiddenMessages,
                 readUser,
                 connectWallet,
                 checkContract: connectingWithContract,
@@ -248,7 +327,7 @@ export const ChatAppProvider = ({ children }) => {
                 clearCurrentChat,
                 unreadCounts,
                 readStatusMap,
-                setError, // Expose setError for child components
+                setError,
             }}
         >
             {children}

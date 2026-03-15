@@ -134,6 +134,29 @@ contract ChatApp {
         return allMessages[chatCode];
     }
 
+    // Delete message (only sender can delete for everyone)
+    function deleteMessage(
+        address friend_key,
+        uint256 msgIndex
+    ) external {
+        require(checkUserExists(msg.sender), "Create account first");
+        require(checkUserExists(friend_key), "User is not registered");
+        require(
+            checkAlreadyFriends(msg.sender, friend_key),
+            "You are not friends with this user"
+        );
+
+        bytes32 chatCode = _getChatCode(msg.sender, friend_key);
+        require(msgIndex < allMessages[chatCode].length, "Invalid message index");
+        require(
+            allMessages[chatCode][msgIndex].sender == msg.sender,
+            "You can only delete your own messages"
+        );
+
+        // Mark as deleted by clearing the content
+        allMessages[chatCode][msgIndex].content = "";
+    }
+
     // Get all app users
     function getAllAppUser() public view returns (AllUserStruct[] memory) {
         return getAllUsers;

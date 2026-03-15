@@ -963,6 +963,134 @@ button {
   box-shadow: var(--glow-primary);
 }
 
+/* --- Message Context Menu --- */
+.context_menu_overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 999;
+  animation: overlayFadeIn 0.15s ease-out;
+}
+
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.context_menu {
+  position: fixed;
+  z-index: 1000;
+  min-width: 200px;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1rem;
+  padding: 0.5rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 30px rgba(99, 102, 241, 0.15);
+  animation: contextMenuSlideUp 0.2s ease-out;
+}
+
+@keyframes contextMenuSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.context_menu_header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 0.25rem;
+}
+
+.context_menu_header span {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.context_menu_close {
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: color 0.2s;
+}
+
+.context_menu_close:hover {
+  color: var(--text-color);
+}
+
+.context_menu_item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.7rem 0.75rem;
+  border: none;
+  background: transparent;
+  color: var(--text-color);
+  font-size: 0.9rem;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 0.6rem;
+  transition: all 0.15s ease;
+}
+
+.context_menu_item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.context_menu_item svg {
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+}
+
+.context_menu_item:hover svg {
+  color: var(--text-color);
+}
+
+.context_menu_item_danger {
+  color: #ef4444;
+}
+
+.context_menu_item_danger svg {
+  color: #ef4444 !important;
+}
+
+.context_menu_item_danger:hover {
+  background: rgba(239, 68, 68, 0.12);
+}
+
+/* Selected Message Highlight */
+.chat_message_selected {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.3) !important;
+}
+
+/* Deleted Message */
+.deleted_message {
+  font-style: italic;
+  opacity: 0.6;
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  color: inherit;
+}
+
 /* --- UserCard (Discovery) --- */
 .UserCard {
   background: var(--card-bg);
