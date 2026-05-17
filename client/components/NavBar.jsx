@@ -27,12 +27,8 @@ const NavBar = () => {
             link: "settings",
         },
         {
-            menu: "FAQs",
-            link: "/",
-        },
-        {
             menu: "Terms of Use",
-            link: "/",
+            link: "/termsofuse",
         },
     ];
 

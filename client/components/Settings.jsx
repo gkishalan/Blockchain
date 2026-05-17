@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
 import Image from "next/image";
 import { ChatAppContext } from "../context/ChatAppContext";
+import { saveProfilePhotoByAddress, getProfilePhotoByAddress } from "../context/ChatAppContext";
 import { LANGUAGES } from "../context/translations";
 import {
     FaCamera, FaUser, FaGlobe, FaComments, FaBell,
@@ -64,8 +65,9 @@ const Settings = () => {
     // Load settings from localStorage on mount
     useEffect(() => {
         if (!account) return;
+        // Load profile photo from global key (not per-account prefix)
+        setProfilePhoto(getProfilePhotoByAddress(account));
         const prefix = `blockchat_${account.toLowerCase()}_`;
-        setProfilePhoto(localStorage.getItem(prefix + "profilePhoto") || null);
         setDisplayName(localStorage.getItem(prefix + "displayName") || "");
         setBio(localStorage.getItem(prefix + "bio") || "");
         setBirthday(localStorage.getItem(prefix + "birthday") || "");
@@ -84,6 +86,11 @@ const Settings = () => {
         localStorage.setItem(prefix + key, value);
     };
 
+    // Broadcast profile photo change to all components on this page
+    const broadcastPhotoChange = (newUrl) => {
+        window.dispatchEvent(new CustomEvent('profilePhotoChanged', { detail: { address: account, url: newUrl } }));
+    };
+
     const calculateStorage = () => {
         let total = 0;
         for (let key in localStorage) {
@@ -96,7 +103,7 @@ const Settings = () => {
         else setStorageUsed((total / (1024 * 1024)).toFixed(2) + " MB");
     };
 
-    // --- Photo Upload ---
+    // --- Photo Upload (Pinata IPFS) ---
     const handlePhotoUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -106,7 +113,7 @@ const Settings = () => {
         }
         setPhotoUploading(true);
         try {
-            // Compress the image
+            // Step 1: Compress the image in-browser (max 400×400px, JPEG 85%)
             const compressedBlob = await new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onload = (re) => {
@@ -128,16 +135,27 @@ const Settings = () => {
                 reader.readAsDataURL(file);
             });
 
+            // Step 2: Upload compressed image to Pinata IPFS via existing API route
             const formData = new FormData();
-            formData.append("file", new File([compressedBlob], "profile.jpg", { type: "image/jpeg" }));
+            formData.append(
+                "file",
+                new File([compressedBlob], `profile_${account}.jpg`, { type: "image/jpeg" })
+            );
             const res = await fetch("/api/upload", { method: "POST", body: formData });
-            if (!res.ok) throw new Error("Upload failed");
-            const data = await res.json();
-            setProfilePhoto(data.url);
-            saveToLocal("profilePhoto", data.url);
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.error || "Upload failed");
+            }
+            const { url } = await res.json();
+
+            // Step 3: Store the public IPFS URL in global key (tiny — just a URL string)
+            // This URL is accessible from any device via Pinata's gateway
+            saveProfilePhotoByAddress(account, url);
+            setProfilePhoto(url);
+            broadcastPhotoChange(url);
         } catch (err) {
             console.error(err);
-            alert("Failed to upload photo.");
+            alert(`Failed to upload photo: ${err.message}`);
         } finally {
             setPhotoUploading(false);
             e.target.value = "";
@@ -145,10 +163,9 @@ const Settings = () => {
     };
 
     const removePhoto = () => {
+        saveProfilePhotoByAddress(account, null);
         setProfilePhoto(null);
-        if (account) {
-            localStorage.removeItem(`blockchat_${account.toLowerCase()}_profilePhoto`);
-        }
+        broadcastPhotoChange(null);
     };
 
     // --- Save Info ---

@@ -4,12 +4,27 @@ import React, { useState, useEffect, useContext } from "react";
 import Image from "next/image";
 import { ethers } from "ethers";
 import { ChatAppContext } from "../../context/ChatAppContext";
-import { FaCopy, FaEye, FaArrowUp, FaArrowDown, FaEthereum } from "react-icons/fa";
+import { getProfilePhotoByAddress } from "../../context/ChatAppContext";
+import { FaCopy, FaEye, FaArrowUp, FaArrowDown, FaEthereum, FaUser } from "react-icons/fa";
 
 const Profile = () => {
     const { account, userName, friendLists, checkContract } = useContext(ChatAppContext);
     const [balance, setBalance] = useState("0");
     const [recentChats, setRecentChats] = useState([]);
+    const [profilePhoto, setProfilePhoto] = useState(null);
+
+    // Load own profile photo
+    useEffect(() => {
+        if (!account) return;
+        setProfilePhoto(getProfilePhotoByAddress(account));
+        const handler = (e) => {
+            if (e.detail?.address?.toLowerCase() === account?.toLowerCase()) {
+                setProfilePhoto(e.detail.url || null);
+            }
+        };
+        window.addEventListener("profilePhotoChanged", handler);
+        return () => window.removeEventListener("profilePhotoChanged", handler);
+    }, [account]);
 
     useEffect(() => {
         const fetchBalance = async () => {
@@ -104,7 +119,17 @@ const Profile = () => {
                     <div className="Profile_card Profile_identity">
                         <div className="Profile_identity_info">
                             <div className="Profile_avatar">
-                                <Image src="/assets/img1.png" alt="avatar" width={80} height={80} />
+                                {profilePhoto ? (
+                                    <img
+                                        src={profilePhoto}
+                                        alt="avatar"
+                                        style={{ width: 80, height: 80, borderRadius: "50%", objectFit: "cover", border: "3px solid var(--secondary-color)" }}
+                                    />
+                                ) : (
+                                    <div className="Profile_avatar_fallback">
+                                        <FaUser size={36} />
+                                    </div>
+                                )}
                             </div>
                             <div className="Profile_identity_text">
                                 <h2>{userName || "User"}</h2>

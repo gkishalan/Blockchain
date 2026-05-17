@@ -577,6 +577,36 @@ button {
   color: var(--text-color);
 }
 
+/* --- Avatar Fallbacks (when no profile photo is set) --- */
+.Friend_avatar_fallback,
+.Chat_avatar_fallback,
+.Profile_avatar_fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--primary-color), #4f46e5);
+  color: #fff;
+  border-radius: 50%;
+  border: 2px solid var(--secondary-color);
+  flex-shrink: 0;
+}
+
+.Friend_avatar_fallback {
+  width: 50px;
+  height: 50px;
+}
+
+.Chat_avatar_fallback {
+  width: 70px;
+  height: 70px;
+}
+
+.Profile_avatar_fallback {
+  width: 80px;
+  height: 80px;
+}
+
+
 /* --- Filter (Search & Action Bar) --- */
 .Filter {
   padding: 2rem 0;
@@ -905,6 +935,81 @@ button {
     transform: scale(1);
   }
 }
+
+/* --- File / Document Bubble Card --- */
+.chat_file_bubble {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 0.85rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.4rem;
+  min-width: 220px;
+  max-width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: default;
+}
+
+.chat_file_bubble_icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+.chat_file_bubble_info {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.chat_file_bubble_name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+  display: block;
+}
+
+.chat_file_bubble_type {
+  font-size: 0.72rem;
+  opacity: 0.6;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.chat_file_bubble_actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.chat_file_action_btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: inherit !important;
+  -webkit-text-fill-color: unset !important;
+  transition: background 0.2s ease, transform 0.15s ease;
+  text-decoration: none !important;
+}
+
+.chat_file_action_btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.1);
+}
+
 
 /* Chat Input Area */
 .Chat_box_send {
@@ -2432,5 +2537,229 @@ button {
   .Settings_font_selector,
   .Settings_bubble_selector {
     flex-wrap: wrap;
+  }
+}
+
+/* =========================================
+   TERMS OF USE PAGE
+   ========================================= */
+
+.TermsOfUse {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 3rem 2rem 5rem;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* Hero Header */
+.TermsOfUse_hero {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.TermsOfUse_hero_icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  color: #fff;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 0 40px rgba(99, 102, 241, 0.4);
+  animation: heroFloat 4s ease-in-out infinite;
+}
+
+.TermsOfUse_hero h1 {
+  font-size: 2.6rem;
+  font-weight: 800;
+  background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 1rem;
+}
+
+.TermsOfUse_hero p {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  line-height: 1.7;
+  max-width: 600px;
+  margin: 0 auto 1.5rem;
+}
+
+.TermsOfUse_badge {
+  display: inline-block;
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--primary-color);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  padding: 0.4rem 1.2rem;
+  border-radius: 99px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Accordion Sections */
+.TermsOfUse_sections {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-bottom: 3rem;
+}
+
+.TermsOfUse_section {
+  background: var(--card-bg);
+  backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: 1.2rem;
+  overflow: hidden;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.TermsOfUse_section_open {
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow: 0 0 25px rgba(99, 102, 241, 0.12);
+}
+
+.TermsOfUse_section_header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background: transparent;
+  border: none;
+  color: var(--text-color);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s ease;
+  font-family: inherit;
+}
+
+.TermsOfUse_section_header:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.TermsOfUse_section_icon {
+  display: flex;
+  align-items: center;
+  color: var(--primary-color);
+  flex-shrink: 0;
+}
+
+.TermsOfUse_section_open .TermsOfUse_section_icon {
+  color: var(--secondary-color);
+}
+
+.TermsOfUse_section_title {
+  flex: 1;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.TermsOfUse_section_chevron {
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+  transition: color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.TermsOfUse_section_open .TermsOfUse_section_chevron {
+  color: var(--primary-color);
+}
+
+.TermsOfUse_section_body {
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.TermsOfUse_section_body p {
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.85;
+  white-space: pre-line;
+}
+
+/* Contact Card */
+.TermsOfUse_contact {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(6, 182, 212, 0.08));
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: 1.5rem;
+  padding: 2.5rem;
+  text-align: center;
+  box-shadow: 0 0 40px rgba(99, 102, 241, 0.08);
+}
+
+.TermsOfUse_contact_icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--primary-color);
+  margin-bottom: 1.25rem;
+}
+
+.TermsOfUse_contact h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.TermsOfUse_contact p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  max-width: 500px;
+  margin: 0 auto 1.5rem;
+}
+
+.TermsOfUse_contact_email {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: linear-gradient(135deg, var(--primary-color), #4f46e5);
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  padding: 0.85rem 2rem;
+  border-radius: 99px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 25px rgba(99, 102, 241, 0.35);
+}
+
+.TermsOfUse_contact_email:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 40px rgba(99, 102, 241, 0.55);
+}
+
+/* Responsive */
+@media screen and (max-width: 600px) {
+  .TermsOfUse {
+    padding: 2rem 1rem 4rem;
+  }
+
+  .TermsOfUse_hero h1 {
+    font-size: 1.9rem;
+  }
+
+  .TermsOfUse_section_header {
+    padding: 1rem 1.2rem;
+  }
+
+  .TermsOfUse_section_body {
+    padding: 0 1.2rem 1.2rem;
+  }
+
+  .TermsOfUse_contact {
+    padding: 1.75rem 1.25rem;
   }
 }

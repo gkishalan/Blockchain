@@ -5,6 +5,24 @@ import { useRouter } from "next/navigation";
 import { ethers } from "ethers";
 import { ChatAppAddress, ChatAppABI } from "./constants";
 
+// ─── Global Profile Photo Helpers ───────────────────────────────────────────
+// Photos are stored under a NON-account-specific key so that every user on
+// the same device / same browser can look up anyone else's photo by address.
+// Key format: blockchat_profile_<walletAddress_lowercase>
+export const getProfilePhotoByAddress = (address) => {
+    if (!address) return null;
+    return localStorage.getItem(`blockchat_profile_${address.toLowerCase()}`) || null;
+};
+
+export const saveProfilePhotoByAddress = (address, dataUrl) => {
+    if (!address) return;
+    if (dataUrl) {
+        localStorage.setItem(`blockchat_profile_${address.toLowerCase()}`, dataUrl);
+    } else {
+        localStorage.removeItem(`blockchat_profile_${address.toLowerCase()}`);
+    }
+};
+
 export const ChatAppContext = createContext();
 
 export const ChatAppProvider = ({ children }) => {
@@ -328,6 +346,8 @@ export const ChatAppProvider = ({ children }) => {
                 unreadCounts,
                 readStatusMap,
                 setError,
+                getProfilePhoto: getProfilePhotoByAddress,
+                saveProfilePhoto: saveProfilePhotoByAddress,
             }}
         >
             {children}

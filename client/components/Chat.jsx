@@ -5,7 +5,8 @@ import { createPortal } from "react-dom";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ChatAppContext } from "../context/ChatAppContext";
-import { FaSmile, FaPaperclip, FaPaperPlane, FaArrowLeft, FaCopy, FaTrash, FaBan, FaTimes } from "react-icons/fa";
+import { getProfilePhotoByAddress } from "../context/ChatAppContext";
+import { FaSmile, FaPaperclip, FaPaperPlane, FaArrowLeft, FaCopy, FaTrash, FaBan, FaTimes, FaUser, FaDownload, FaExternalLinkAlt, FaFileWord, FaFilePdf, FaFileAlt } from "react-icons/fa";
 
 const Chat = ({ functionName, readMessage, friendMsg, account, userName, loading, currentUserName, currentUserAddress }) => {
     const { clearCurrentChat, setError, readStatusMap, deleteMessage, hideMessageForMe, getHiddenMessages } = useContext(ChatAppContext);
@@ -14,6 +15,21 @@ const Chat = ({ functionName, readMessage, friendMsg, account, userName, loading
         name: "",
         address: "",
     });
+
+    // Friend's profile photo
+    const [friendPhoto, setFriendPhoto] = useState(null);
+    useEffect(() => {
+        setFriendPhoto(getProfilePhotoByAddress(currentUserAddress));
+    }, [currentUserAddress]);
+    useEffect(() => {
+        const handler = (e) => {
+            if (e.detail?.address?.toLowerCase() === currentUserAddress?.toLowerCase()) {
+                setFriendPhoto(e.detail.url || null);
+            }
+        };
+        window.addEventListener("profilePhotoChanged", handler);
+        return () => window.removeEventListener("profilePhotoChanged", handler);
+    }, [currentUserAddress]);
 
     // Context menu state
     const [contextMenu, setContextMenu] = useState({ visible: false, msgIndex: null, x: 0, y: 0 });
@@ -271,7 +287,8 @@ const Chat = ({ functionName, readMessage, friendMsg, account, userName, loading
                 <img
                     src={content}
                     alt="Sent image"
-                    style={{ maxWidth: "100%", borderRadius: "10px", marginBottom: "0.5rem" }}
+                    style={{ maxWidth: "100%", borderRadius: "10px", marginBottom: "0.5rem", display: "block" }}
+                    onClick={(e) => e.stopPropagation()}
                 />
             );
         }
@@ -281,36 +298,97 @@ const Chat = ({ functionName, readMessage, friendMsg, account, userName, loading
                     src={content}
                     controls
                     style={{ maxWidth: "100%", borderRadius: "10px", marginBottom: "0.5rem" }}
+                    onClick={(e) => e.stopPropagation()}
                 />
             );
         }
         if (checkDocument(content)) {
+            // Detect file extension for icon & label
+            const ext = (content.match(/\.([a-zA-Z0-9]+)(?:\?|$)/) || [])[1]?.toLowerCase();
+            const isPdf = ext === "pdf";
+            const isWord = ext === "doc" || ext === "docx";
+            const FileIcon = isPdf ? FaFilePdf : isWord ? FaFileWord : FaFileAlt;
+            const iconColor = isPdf ? "#ef4444" : isWord ? "#3b82f6" : "#94a3b8";
+            const label = ext ? ext.toUpperCase() + " Document" : "Document";
+            // Extract filename from URL
+            const filename = decodeURIComponent(content.split("/").pop().split("?")[0]) || label;
+
             return (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                    <FaPaperclip />
-                    <a download="document" href={content} style={{ color: 'inherit', textDecoration: 'underline' }}>
-                        Download Document
-                    </a>
+                <div className="chat_file_bubble" onClick={(e) => e.stopPropagation()}>
+                    <div className="chat_file_bubble_icon" style={{ color: iconColor }}>
+                        <FileIcon size={28} />
+                    </div>
+                    <div className="chat_file_bubble_info">
+                        <span className="chat_file_bubble_name">{filename}</span>
+                        <span className="chat_file_bubble_type">{label}</span>
+                    </div>
+                    <div className="chat_file_bubble_actions">
+                        <a
+                            href={content}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="chat_file_action_btn"
+                            title="Open in new tab"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <FaExternalLinkAlt size={13} />
+                        </a>
+                        <a
+                            href={content}
+                            download={filename}
+                            className="chat_file_action_btn"
+                            title="Download"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <FaDownload size={13} />
+                        </a>
+                    </div>
                 </div>
             );
         }
         if (isIpfsUrl(content)) {
+            // Try to render as image first; if it fails, show a file card
+            const filename = decodeURIComponent(content.split("/").pop().split("?")[0]) || "IPFS File";
             return (
-                <div className="ipfs_file_container" style={{ marginBottom: '0.5rem' }}>
+                <div className="ipfs_file_container" style={{ marginBottom: '0.5rem' }} onClick={(e) => e.stopPropagation()}>
                     <img
                         src={content}
-                        alt="IPFS file"
-                        style={{ maxWidth: "100%", borderRadius: "10px" }}
-                        onError={(e) => {
-                            e.target.style.display = 'none';
-                            e.target.nextSibling.style.display = 'flex';
+                        alt="Shared file"
+                        style={{ maxWidth: "100%", borderRadius: "10px", display: "block" }}
+                        onError={(ev) => {
+                            ev.target.style.display = 'none';
+                            ev.target.nextSibling.style.display = 'flex';
                         }}
                     />
-                    <div style={{ display: 'none', alignItems: 'center', gap: '0.5rem' }}>
-                        <FaPaperclip />
-                        <a href={content} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>
-                            View IPFS File
-                        </a>
+                    <div className="chat_file_bubble" style={{ display: 'none' }}>
+                        <div className="chat_file_bubble_icon">
+                            <FaFileAlt size={28} />
+                        </div>
+                        <div className="chat_file_bubble_info">
+                            <span className="chat_file_bubble_name">{filename}</span>
+                            <span className="chat_file_bubble_type">IPFS File</span>
+                        </div>
+                        <div className="chat_file_bubble_actions">
+                            <a
+                                href={content}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="chat_file_action_btn"
+                                title="Open file"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <FaExternalLinkAlt size={13} />
+                            </a>
+                            <a
+                                href={content}
+                                download={filename}
+                                className="chat_file_action_btn"
+                                title="Download"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <FaDownload size={13} />
+                            </a>
+                        </div>
                     </div>
                 </div>
             );
@@ -326,7 +404,19 @@ const Chat = ({ functionName, readMessage, friendMsg, account, userName, loading
                         <div className="mobile_back_btn" onClick={() => clearCurrentChat()}>
                             <FaArrowLeft size={20} />
                         </div>
-                        <Image src="/assets/img1.png" alt="image" width={70} height={70} />
+                        {friendPhoto ? (
+                            <img
+                                src={friendPhoto}
+                                alt={currentUserName}
+                                width={70}
+                                height={70}
+                                style={{ borderRadius: "50%", objectFit: "cover", width: 70, height: 70, border: "2px solid var(--secondary-color)" }}
+                            />
+                        ) : (
+                            <div className="Chat_avatar_fallback">
+                                <FaUser size={28} />
+                            </div>
+                        )}
                         <div className="Chat_user_info_box">
                             <h4>{currentUserName}</h4>
                             <p className="show">{currentUserAddress}</p>
