@@ -4,46 +4,12 @@
 export const LANGUAGES = [
   { code: "en", name: "English", nativeName: "English", dir: "ltr" },
   { code: "ar", name: "Arabic", nativeName: "العربية", dir: "rtl" },
-  { code: "bn", name: "Bengali", nativeName: "বাংলা", dir: "ltr" },
-  { code: "ca", name: "Catalan", nativeName: "Català", dir: "ltr" },
-  { code: "cs", name: "Czech", nativeName: "Čeština", dir: "ltr" },
-  { code: "da", name: "Danish", nativeName: "Dansk", dir: "ltr" },
-  { code: "de", name: "German", nativeName: "Deutsch", dir: "ltr" },
-  { code: "el", name: "Greek", nativeName: "Ελληνικά", dir: "ltr" },
   { code: "es", name: "Spanish", nativeName: "Español", dir: "ltr" },
-  { code: "fi", name: "Finnish", nativeName: "Suomi", dir: "ltr" },
-  { code: "fil", name: "Filipino", nativeName: "Filipino", dir: "ltr" },
   { code: "fr", name: "French", nativeName: "Français", dir: "ltr" },
-  { code: "he", name: "Hebrew", nativeName: "עברית", dir: "rtl" },
+  { code: "zh", name: "Chinese", nativeName: "中文", dir: "ltr" },
   { code: "hi", name: "Hindi", nativeName: "हिन्दी", dir: "ltr" },
-  { code: "hr", name: "Croatian", nativeName: "Hrvatski", dir: "ltr" },
-  { code: "hu", name: "Hungarian", nativeName: "Magyar", dir: "ltr" },
-  { code: "id", name: "Indonesian", nativeName: "Bahasa Indonesia", dir: "ltr" },
-  { code: "it", name: "Italian", nativeName: "Italiano", dir: "ltr" },
-  { code: "ja", name: "Japanese", nativeName: "日本語", dir: "ltr" },
-  { code: "ko", name: "Korean", nativeName: "한국어", dir: "ltr" },
-  { code: "ms", name: "Malay", nativeName: "Bahasa Melayu", dir: "ltr" },
-  { code: "nb", name: "Norwegian", nativeName: "Norsk bokmål", dir: "ltr" },
-  { code: "nl", name: "Dutch", nativeName: "Nederlands", dir: "ltr" },
-  { code: "pl", name: "Polish", nativeName: "Polski", dir: "ltr" },
-  { code: "pt-BR", name: "Portuguese (Brazil)", nativeName: "Português (BR)", dir: "ltr" },
-  { code: "pt-PT", name: "Portuguese (Portugal)", nativeName: "Português (PT)", dir: "ltr" },
-  { code: "ro", name: "Romanian", nativeName: "Română", dir: "ltr" },
-  { code: "ru", name: "Russian", nativeName: "Русский", dir: "ltr" },
-  { code: "sk", name: "Slovak", nativeName: "Slovenčina", dir: "ltr" },
-  { code: "sv", name: "Swedish", nativeName: "Svenska", dir: "ltr" },
-  { code: "ta", name: "Tamil", nativeName: "தமிழ்", dir: "ltr" },
-  { code: "te", name: "Telugu", nativeName: "తెలుగు", dir: "ltr" },
-  { code: "th", name: "Thai", nativeName: "ภาษาไทย", dir: "ltr" },
-  { code: "tr", name: "Turkish", nativeName: "Türkçe", dir: "ltr" },
-  { code: "uk", name: "Ukrainian", nativeName: "Українська", dir: "ltr" },
-  { code: "ur", name: "Urdu", nativeName: "اردو", dir: "rtl" },
-  { code: "vi", name: "Vietnamese", nativeName: "Tiếng Việt", dir: "ltr" },
-  { code: "zh-CN", name: "Chinese (Simplified)", nativeName: "中文简体", dir: "ltr" },
-  { code: "zh-TW", name: "Chinese (Traditional)", nativeName: "中文繁體", dir: "ltr" },
 ];
 
-// English strings (default — used as fallback for all languages)
 const en = {
   // NavBar
   nav_allUsers: "All Users",
@@ -66,60 +32,19 @@ const en = {
   settings_removePhoto: "Remove Photo",
   settings_changePhoto: "Change Photo",
   settings_photoHint: "Upload a photo from your device. Max 5MB.",
-  settings_displayName: "Display Name",
-  settings_displayNamePlaceholder: "Enter a display name...",
-  settings_bio: "Bio",
-  settings_bioPlaceholder: "Tell something about yourself...",
-  settings_birthday: "Birthday",
-  settings_username: "Username (on-chain)",
-  settings_usernameHint: "Username is stored on the blockchain and cannot be changed here.",
-  settings_walletAddress: "Wallet Address",
-  settings_save: "Save Changes",
-  settings_saved: "Saved!",
-  settings_searchLanguage: "Search languages...",
-  settings_fontSize: "Font Size",
-  settings_fontSmall: "Small",
-  settings_fontMedium: "Medium",
-  settings_fontLarge: "Large",
-  settings_bubbleStyle: "Message Bubble Style",
-  settings_bubbleRounded: "Rounded",
-  settings_bubbleSharp: "Sharp",
-  settings_enterToSend: "Press Enter to Send",
-  settings_enterToSendHint: "When enabled, pressing Enter sends the message. Use Shift+Enter for new line.",
-  settings_messageSound: "Message Sound",
-  settings_messageSoundHint: "Play a sound when you receive a new message.",
-  settings_desktopNotif: "Desktop Notifications",
-  settings_desktopNotifHint: "Show browser notifications for new messages.",
-  settings_storageUsed: "Storage Used",
-  settings_clearData: "Clear Chat Data",
-  settings_clearDataHint: "This will clear all locally cached chat data. Messages on the blockchain are not affected.",
-  settings_exportData: "Export Chat Data",
-  settings_exportDataHint: "Download all your chat data as a JSON file.",
-  settings_clearConfirm: "Are you sure? This will clear all local chat data.",
-  settings_cleared: "Data cleared!",
-  settings_exported: "Data exported!",
-
+  
   // Chat
   chat_typeMessage: "Type your message",
-  chat_downloadDoc: "Download Document",
-
+  
   // Filter
   filter_search: "Search friends...",
   filter_addFriend: "Add Friend",
-
+  
   // Login
-  login_welcome: "Welcome to",
-  login_appName: "BlockChat",
-  login_subtitle: "Connect your wallet and create your account to start chatting on the blockchain.",
-  login_connectWallet: "Connect Wallet",
-  login_step1: "Step 1",
-  login_step2: "Step 2",
-  login_connectTitle: "Connect Your Wallet",
-  login_connectHint: "Link your MetaMask wallet to get started.",
   login_createTitle: "Create Your Identity",
   login_createHint: "Choose a username for the blockchain.",
   login_namePlaceholder: "Enter your username",
-  login_createAccount: "Create Account",
+  login_createAccount: "Get Started",
   login_footer: "Powered by Ethereum Blockchain",
 
   // Profile
@@ -136,27 +61,135 @@ const en = {
   profile_noChats: "No recent chats found.",
 };
 
-// Translation map — for now English is the only fully translated language.
-// Other languages use English as fallback. This structure allows incremental translation.
-const translations = { en };
+const es = {
+  nav_allUsers: "Todos los usuarios",
+  nav_chat: "Chat",
+  nav_profile: "Perfil",
+  nav_settings: "Ajustes",
+  nav_terms: "Condiciones",
+  settings_title: "Ajustes",
+  settings_subtitle: "Personaliza tu experiencia en BlockChat",
+  settings_profilePhoto: "Foto de perfil",
+  settings_editInfo: "Editar información",
+  settings_language: "Idioma",
+  settings_chatSettings: "Ajustes de chat",
+  settings_notifications: "Notificaciones",
+  settings_dataStorage: "Datos y almacenamiento",
+  settings_uploadPhoto: "Subir foto",
+  settings_removePhoto: "Eliminar foto",
+  settings_changePhoto: "Cambiar foto",
+  settings_photoHint: "Sube una foto desde tu dispositivo. Máx 5MB.",
+  chat_typeMessage: "Escribe tu mensaje",
+  filter_search: "Buscar amigos...",
+  filter_addFriend: "Añadir amigo",
+  login_createTitle: "Crea tu identidad",
+  login_createHint: "Elige un nombre de usuario para la blockchain.",
+  login_namePlaceholder: "Introduce tu usuario",
+  login_createAccount: "Empezar",
+  login_footer: "Desarrollado por Ethereum Blockchain",
+  profile_title: "Perfil de billetera",
+  profile_subtitle: "Gestiona tus activos digitales e historial",
+  profile_editIdentity: "EDITAR IDENTIDAD",
+  profile_privacySettings: "AJUSTES DE PRIVACIDAD",
+  profile_totalPortfolio: "Portafolio total",
+  profile_send: "Enviar",
+  profile_receive: "Recibir",
+  profile_walletAddress: "DIRECCIÓN PÚBLICA",
+  profile_copy: "Copiar",
+  profile_recentChats: "Historial de chat reciente",
+  profile_noChats: "No se encontraron chats recientes.",
+};
 
-/**
- * Get a translated string. Falls back to English if the key is missing.
- * @param {string} langCode - e.g. "en", "fr", "ta"
- * @param {string} key - e.g. "settings_title"
- * @returns {string}
- */
+const fr = {
+  nav_allUsers: "Tous les utilisateurs",
+  nav_chat: "Discussion",
+  nav_profile: "Profil",
+  nav_settings: "Paramètres",
+  nav_terms: "Conditions",
+  settings_title: "Paramètres",
+  settings_subtitle: "Personnalisez votre expérience",
+  settings_profilePhoto: "Photo de profil",
+  settings_editInfo: "Modifier les infos",
+  settings_language: "Langue",
+  settings_chatSettings: "Paramètres de chat",
+  settings_notifications: "Notifications",
+  settings_dataStorage: "Données et stockage",
+  settings_uploadPhoto: "Importer une photo",
+  settings_removePhoto: "Supprimer la photo",
+  settings_changePhoto: "Changer de photo",
+  settings_photoHint: "Importez une photo. Max 5MB.",
+  chat_typeMessage: "Tapez votre message",
+  filter_search: "Rechercher des amis...",
+  filter_addFriend: "Ajouter un ami",
+  profile_title: "Profil du portefeuille",
+};
+
+const ar = {
+  nav_allUsers: "جميع المستخدمين",
+  nav_chat: "محادثة",
+  nav_profile: "حساب تعريفي",
+  nav_settings: "إعدادات",
+  nav_terms: "شروط الاستخدام",
+  settings_title: "إعدادات",
+  settings_subtitle: "تخصيص تجربتك",
+  settings_profilePhoto: "صورة الملف الشخصي",
+  settings_editInfo: "تعديل المعلومات",
+  settings_language: "لغة",
+  settings_chatSettings: "إعدادات الدردشة",
+  settings_notifications: "إشعارات",
+  settings_dataStorage: "البيانات والتخزين",
+  chat_typeMessage: "اكتب رسالتك",
+  filter_search: "البحث عن أصدقاء...",
+  filter_addFriend: "إضافة صديق",
+  profile_title: "محفظة الملف الشخصي",
+};
+
+const zh = {
+  nav_allUsers: "所有用户",
+  nav_chat: "聊天",
+  nav_profile: "个人资料",
+  nav_settings: "设置",
+  nav_terms: "使用条款",
+  settings_title: "设置",
+  settings_subtitle: "自定义您的体验",
+  settings_profilePhoto: "个人资料照片",
+  settings_editInfo: "编辑信息",
+  settings_language: "语言",
+  settings_chatSettings: "聊天设置",
+  settings_notifications: "通知",
+  settings_dataStorage: "数据与存储",
+  chat_typeMessage: "输入您的消息",
+  filter_search: "搜索好友...",
+  filter_addFriend: "添加好友",
+  profile_title: "钱包资料",
+};
+
+const hi = {
+  nav_allUsers: "सभी उपयोगकर्ता",
+  nav_chat: "चैट",
+  nav_profile: "प्रोफ़ाइल",
+  nav_settings: "सेटिंग्स",
+  nav_terms: "उपयोग की शर्तें",
+  settings_title: "सेटिंग्स",
+  settings_subtitle: "अपना अनुभव अनुकूलित करें",
+  settings_profilePhoto: "प्रोफ़ाइल फोटो",
+  settings_editInfo: "जानकारी संपादित करें",
+  settings_language: "भाषा",
+  settings_chatSettings: "चैट सेटिंग्स",
+  chat_typeMessage: "अपना संदेश टाइप करें",
+  filter_search: "दोस्तों को खोजें...",
+  filter_addFriend: "दोस्त जोड़ें",
+  profile_title: "वॉलेट प्रोफाइल",
+};
+
+const translations = { en, es, fr, ar, zh, hi };
+
 export function getTranslation(langCode, key) {
   const langStrings = translations[langCode];
   if (langStrings && langStrings[key]) return langStrings[key];
   return en[key] || key;
 }
 
-/**
- * Get all translations for a language (merged with English fallback)
- * @param {string} langCode
- * @returns {object}
- */
 export function getAllTranslations(langCode) {
   const langStrings = translations[langCode] || {};
   return { ...en, ...langStrings };

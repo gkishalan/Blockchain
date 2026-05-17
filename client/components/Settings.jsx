@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ChatAppContext } from "../context/ChatAppContext";
 import { saveProfilePhotoByAddress, getProfilePhotoByAddress } from "../context/ChatAppContext";
 import { LANGUAGES } from "../context/translations";
+import { useLanguage } from "../context/LanguageContext";
 import {
     FaCamera, FaUser, FaGlobe, FaComments, FaBell,
     FaDatabase, FaTrash, FaDownload, FaCheck, FaSave,
@@ -20,19 +21,10 @@ const SECTIONS = [
     { id: "data", icon: FaDatabase, label: "settings_dataStorage" },
 ];
 
-const SECTION_LABELS = {
-    settings_profilePhoto: "Profile Photo",
-    settings_editInfo: "Edit Info",
-    settings_language: "Language",
-    settings_chatSettings: "Chat Settings",
-    settings_notifications: "Notifications",
-    settings_dataStorage: "Data & Storage",
-};
-
 const Settings = () => {
-    const { account, userName } = useContext(ChatAppContext);
+    const { account, userName, updateUserName } = useContext(ChatAppContext);
+    const { t, lang, setLanguage } = useLanguage();
     const [activeSection, setActiveSection] = useState("photo");
-    const fileInputRef = useRef(null);
 
     // --- Profile Photo State ---
     const [profilePhoto, setProfilePhoto] = useState(null);
@@ -43,6 +35,7 @@ const Settings = () => {
     const [bio, setBio] = useState("");
     const [birthday, setBirthday] = useState("");
     const [infoSaved, setInfoSaved] = useState(false);
+    const [nameSaving, setNameSaving] = useState(false);
 
     // --- Language State ---
     const [currentLang, setCurrentLang] = useState("en");
@@ -68,7 +61,9 @@ const Settings = () => {
         // Load profile photo from global key (not per-account prefix)
         setProfilePhoto(getProfilePhotoByAddress(account));
         const prefix = `blockchat_${account.toLowerCase()}_`;
-        setDisplayName(localStorage.getItem(prefix + "displayName") || "");
+        // Initialise displayName from on-chain userName (falls back to localStorage for backwards-compat)
+        const savedName = localStorage.getItem(prefix + "displayName");
+        setDisplayName(savedName !== null ? savedName : (userName || ""));
         setBio(localStorage.getItem(prefix + "bio") || "");
         setBirthday(localStorage.getItem(prefix + "birthday") || "");
         setCurrentLang(localStorage.getItem(prefix + "language") || "en");
@@ -148,8 +143,7 @@ const Settings = () => {
             }
             const { url } = await res.json();
 
-            // Step 3: Store the public IPFS URL in global key (tiny — just a URL string)
-            // This URL is accessible from any device via Pinata's gateway
+            // Step 3: Store the public IPFS URL in global key
             saveProfilePhotoByAddress(account, url);
             setProfilePhoto(url);
             broadcastPhotoChange(url);
@@ -158,8 +152,16 @@ const Settings = () => {
             alert(`Failed to upload photo: ${err.message}`);
         } finally {
             setPhotoUploading(false);
-            e.target.value = "";
         }
+    };
+
+    const handlePhotoClick = () => {
+        if (photoUploading) return;
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "image/*";
+        input.onchange = handlePhotoUpload;
+        input.click();
     };
 
     const removePhoto = () => {
@@ -169,10 +171,30 @@ const Settings = () => {
     };
 
     // --- Save Info ---
-    const saveInfo = () => {
-        saveToLocal("displayName", displayName);
+    const saveInfo = async () => {
+        // 1. Always save bio & birthday locally
         saveToLocal("bio", bio);
         saveToLocal("birthday", birthday);
+
+        // 2. If display name changed, push it on-chain
+        const trimmed = displayName.trim();
+        if (trimmed && trimmed !== userName) {
+            setNameSaving(true);
+            try {
+                await updateUserName(trimmed);
+                // Keep localStorage in sync so it survives page reload
+                saveToLocal("displayName", trimmed);
+            } catch (e) {
+                // updateUserName already calls setError, so just bail
+                setNameSaving(false);
+                return;
+            }
+            setNameSaving(false);
+        } else {
+            // Name unchanged — just persist bio/birthday
+            saveToLocal("displayName", trimmed || userName || "");
+        }
+
         setInfoSaved(true);
         setTimeout(() => setInfoSaved(false), 2000);
     };
@@ -180,6 +202,7 @@ const Settings = () => {
     // --- Language ---
     const selectLanguage = (code) => {
         setCurrentLang(code);
+        setLanguage(code);
         saveToLocal("language", code);
     };
 
@@ -258,8 +281,8 @@ const Settings = () => {
     // --- Renderers ---
     const renderPhoto = () => (
         <div className="Settings_section">
-            <h2><FaCamera /> Profile Photo</h2>
-            <p className="Settings_section_hint">Upload a photo from your device. Max 5MB.</p>
+            <h2><FaCamera /> {t("settings_profilePhoto")}</h2>
+            <p className="Settings_section_hint">{t("settings_photoHint")}</p>
             <div className="Settings_photo_container">
                 <div className="Settings_photo_preview">
                     {profilePhoto ? (
@@ -271,30 +294,23 @@ const Settings = () => {
                     )}
                     <div
                         className="Settings_photo_overlay"
-                        onClick={() => fileInputRef.current?.click()}
+                        onClick={handlePhotoClick}
                     >
                         <FaCamera size={20} />
                         <span>{photoUploading ? "Uploading..." : "Change"}</span>
                     </div>
                 </div>
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    accept="image/*"
-                    onChange={handlePhotoUpload}
-                    style={{ display: "none" }}
-                />
                 <div className="Settings_photo_actions">
                     <button
                         className="Settings_btn Settings_btn_primary"
-                        onClick={() => fileInputRef.current?.click()}
+                        onClick={handlePhotoClick}
                         disabled={photoUploading}
                     >
-                        <FaCamera /> {profilePhoto ? "Change Photo" : "Upload Photo"}
+                        <FaCamera /> {profilePhoto ? t("settings_changePhoto") : t("settings_uploadPhoto")}
                     </button>
                     {profilePhoto && (
                         <button className="Settings_btn Settings_btn_outline" onClick={removePhoto}>
-                            <FaTrash /> Remove Photo
+                            <FaTrash /> {t("settings_removePhoto")}
                         </button>
                     )}
                 </div>
@@ -308,11 +324,18 @@ const Settings = () => {
 
             <div className="Settings_field">
                 <label>Username (on-chain)</label>
-                <div className="Settings_input_group Settings_input_disabled">
-                    <input type="text" value={userName || ""} disabled />
-                    <FaInfoCircle className="Settings_field_icon" title="Username is stored on the blockchain and cannot be changed here." />
+                <div className="Settings_input_group">
+                    <input
+                        type="text"
+                        value={displayName || ""}
+                        onChange={(e) => setDisplayName(e.target.value)}
+                        placeholder={userName || "Enter new username..."}
+                        maxLength={50}
+                    />
                 </div>
-                <small className="Settings_field_hint">Stored on the blockchain — cannot be changed.</small>
+                <small className="Settings_field_hint">
+                    Current on-chain name: <strong>{userName || "—"}</strong>. Saving will send a MetaMask transaction.
+                </small>
             </div>
 
             <div className="Settings_field">
@@ -323,29 +346,16 @@ const Settings = () => {
             </div>
 
             <div className="Settings_field">
-                <label>Display Name</label>
-                <div className="Settings_input_group">
-                    <input
-                        type="text"
-                        value={displayName}
-                        onChange={(e) => setDisplayName(e.target.value)}
-                        placeholder="Enter a display name..."
-                        maxLength={50}
-                    />
-                </div>
-            </div>
-
-            <div className="Settings_field">
                 <label>Bio</label>
                 <textarea
                     className="Settings_textarea"
-                    value={bio}
+                    value={bio || ""}
                     onChange={(e) => setBio(e.target.value)}
                     placeholder="Tell something about yourself..."
                     maxLength={200}
                     rows={3}
                 />
-                <small className="Settings_field_hint">{bio.length}/200 characters</small>
+                <small className="Settings_field_hint">{(bio || "").length}/200 characters</small>
             </div>
 
             <div className="Settings_field">
@@ -353,14 +363,22 @@ const Settings = () => {
                 <div className="Settings_input_group">
                     <input
                         type="date"
-                        value={birthday}
+                        value={birthday || ""}
                         onChange={(e) => setBirthday(e.target.value)}
                     />
                 </div>
             </div>
 
-            <button className="Settings_btn Settings_btn_primary Settings_btn_save" onClick={saveInfo}>
-                {infoSaved ? <><FaCheck /> Saved!</> : <><FaSave /> Save Changes</>}
+            <button
+                className="Settings_btn Settings_btn_primary Settings_btn_save"
+                onClick={saveInfo}
+                disabled={nameSaving || infoSaved}
+            >
+                {nameSaving
+                    ? <><FaSave /> Saving on-chain…</>
+                    : infoSaved
+                        ? <><FaCheck /> Saved!</>
+                        : <><FaSave /> Save Changes</>}
             </button>
         </div>
     );
@@ -375,7 +393,7 @@ const Settings = () => {
                 <input
                     type="text"
                     placeholder="Search languages..."
-                    value={langSearch}
+                    value={langSearch || ""}
                     onChange={(e) => setLangSearch(e.target.value)}
                 />
                 {langSearch && (
@@ -541,8 +559,8 @@ const Settings = () => {
         <div className="Settings">
             <div className="Settings_box">
                 <div className="Settings_header">
-                    <h1>Settings</h1>
-                    <p>Customize your BlockChat experience</p>
+                    <h1>{t("settings_title")}</h1>
+                    <p>{t("settings_subtitle")}</p>
                 </div>
 
                 <div className="Settings_layout">
@@ -557,7 +575,7 @@ const Settings = () => {
                                     onClick={() => setActiveSection(section.id)}
                                 >
                                     <Icon />
-                                    <span>{SECTION_LABELS[section.label]}</span>
+                                    <span>{t(section.label)}</span>
                                 </div>
                             );
                         })}

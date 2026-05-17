@@ -6,28 +6,31 @@ import Link from "next/link";
 import { ChatAppContext } from "../context/ChatAppContext";
 import { MdClose, MdMenu } from "react-icons/md";
 import { FaUser } from "react-icons/fa";
+import { useLanguage } from "../context/LanguageContext";
 import Error from "./Error";
 
 const NavBar = () => {
+    const { t } = useLanguage();
+
     const menuItems = [
         {
-            menu: "All Users",
+            menu: t("nav_allUsers"),
             link: "alluser",
         },
         {
-            menu: "Chat",
+            menu: t("nav_chat"),
             link: "/",
         },
         {
-            menu: "Profile",
+            menu: t("nav_profile"),
             link: "profile",
         },
         {
-            menu: "Settings",
+            menu: t("nav_settings"),
             link: "settings",
         },
         {
-            menu: "Terms of Use",
+            menu: t("nav_terms"),
             link: "/termsofuse",
         },
     ];

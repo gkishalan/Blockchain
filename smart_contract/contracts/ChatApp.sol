@@ -157,6 +157,22 @@ contract ChatApp {
         allMessages[chatCode][msgIndex].content = "";
     }
 
+    // Update username (on-chain)
+    function updateUsername(string calldata newName) external {
+        require(checkUserExists(msg.sender), "Create account first");
+        require(bytes(newName).length > 0, "Username cannot be empty");
+
+        userList[msg.sender].name = newName;
+
+        // Keep the getAllUsers list in sync
+        for (uint256 i = 0; i < getAllUsers.length; i++) {
+            if (getAllUsers[i].accountAddress == msg.sender) {
+                getAllUsers[i].name = newName;
+                break;
+            }
+        }
+    }
+
     // Get all app users
     function getAllAppUser() public view returns (AllUserStruct[] memory) {
         return getAllUsers;

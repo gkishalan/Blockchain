@@ -170,6 +170,23 @@ export const ChatAppProvider = ({ children }) => {
         }
     };
 
+    // Update username on-chain
+    const updateUserName = async (newName) => {
+        try {
+            if (!newName || !newName.trim()) return setError("Name cannot be empty");
+            const contract = await connectingWithContract();
+            const tx = await contract.updateUsername(newName.trim());
+            setLoading(true);
+            await tx.wait();
+            setLoading(false);
+            setUserName(newName.trim());
+        } catch (error) {
+            console.error("Error updating username:", error);
+            setError("Failed to update username. Please try again.");
+            setLoading(false);
+        }
+    };
+
     // Read User
     const readUser = async (userAddress) => {
         const contract = await connectingWithContract();
@@ -332,6 +349,7 @@ export const ChatAppProvider = ({ children }) => {
                 getHiddenMessages,
                 readUser,
                 connectWallet,
+                updateUserName,
                 checkContract: connectingWithContract,
                 account,
                 userName,

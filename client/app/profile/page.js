@@ -5,10 +5,12 @@ import Image from "next/image";
 import { ethers } from "ethers";
 import { ChatAppContext } from "../../context/ChatAppContext";
 import { getProfilePhotoByAddress } from "../../context/ChatAppContext";
+import { useLanguage } from "../../context/LanguageContext";
 import { FaCopy, FaEye, FaArrowUp, FaArrowDown, FaEthereum, FaUser } from "react-icons/fa";
 
 const Profile = () => {
     const { account, userName, friendLists, checkContract } = useContext(ChatAppContext);
+    const { t } = useLanguage();
     const [balance, setBalance] = useState("0");
     const [recentChats, setRecentChats] = useState([]);
     const [profilePhoto, setProfilePhoto] = useState(null);
@@ -110,8 +112,8 @@ const Profile = () => {
         <div className="Profile">
             <div className="Profile_box">
                 <div className="Profile_header">
-                    <h1>Wallet Profile</h1>
-                    <p>Manage your digital assets and transaction history</p>
+                    <h1>{t("profile_title")}</h1>
+                    <p>{t("profile_subtitle")}</p>
                 </div>
 
                 <div className="Profile_grid">
@@ -135,8 +137,8 @@ const Profile = () => {
                                 <h2>{userName || "User"}</h2>
                                 <p>Web3 Identity • Connected via MetaMask</p>
                                 <div className="Profile_identity_btns">
-                                    <button>EDIT IDENTITY</button>
-                                    <button className="outline">PRIVACY SETTINGS</button>
+                                    <button>{t("profile_editIdentity")}</button>
+                                    <button className="outline">{t("profile_privacySettings")}</button>
                                 </div>
                             </div>
                         </div>
@@ -145,7 +147,7 @@ const Profile = () => {
                     {/* Portfolio Card */}
                     <div className="Profile_card Profile_portfolio">
                         <div className="Profile_portfolio_header">
-                            <span>Total Portfolio</span>
+                            <span>{t("profile_totalPortfolio")}</span>
                             <FaEye />
                         </div>
                         <div className="Profile_portfolio_balance">
@@ -153,26 +155,26 @@ const Profile = () => {
                             <span className="badge">+2.45%</span>
                         </div>
                         <div className="Profile_portfolio_actions">
-                            <button><FaArrowUp /> Send</button>
-                            <button className="outline"><FaArrowDown /> Receive</button>
+                            <button><FaArrowUp /> {t("profile_send")}</button>
+                            <button className="outline"><FaArrowDown /> {t("profile_receive")}</button>
                         </div>
                     </div>
 
                     {/* Address Card */}
                     <div className="Profile_card Profile_address">
                         <div className="Profile_address_header">
-                            <span>PUBLIC WALLET ADDRESS</span>
+                            <span>{t("profile_walletAddress")}</span>
                         </div>
                         <div className="Profile_address_value">
                             <p>{account}</p>
-                            <button onClick={copyAddress}><FaCopy /> Copy</button>
+                            <button onClick={copyAddress}><FaCopy /> {t("profile_copy")}</button>
                         </div>
                     </div>
                 </div>
 
                 {/* Recent Chat History */}
                 <div className="Profile_transactions">
-                    <h3>Recent Chat History</h3>
+                    <h3>{t("profile_recentChats")}</h3>
                     <div className="Profile_transactions_list">
                         {recentChats.length > 0 ? (
                             recentChats.map((chat, i) => (
@@ -193,7 +195,7 @@ const Profile = () => {
                                 </div>
                             ))
                         ) : (
-                            <p style={{ color: '#64748b', textAlign: 'center' }}>No recent chats found.</p>
+                            <p style={{ color: '#64748b', textAlign: 'center' }}>{t("profile_noChats")}</p>
                         )}
                     </div>
                 </div>

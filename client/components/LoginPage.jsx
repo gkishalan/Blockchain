@@ -4,10 +4,12 @@ import React, { useState, useContext } from "react";
 import Image from "next/image";
 import { ChatAppContext } from "../context/ChatAppContext";
 import { FaUser, FaWallet, FaArrowRight, FaShieldAlt, FaLock, FaComments } from "react-icons/fa";
+import { useLanguage } from "../context/LanguageContext";
 
 const LoginPage = () => {
     const [name, setName] = useState("");
     const { account, connectWallet, createAccount, loading, error, setError } = useContext(ChatAppContext);
+    const { t } = useLanguage();
 
     const handleCreateAccount = () => {
         if (!name.trim()) {
@@ -96,14 +98,14 @@ const LoginPage = () => {
                                 <div className="LoginPage_step_badge">
                                     <FaWallet style={{ fontSize: "0.7rem" }} /> Wallet Connected
                                 </div>
-                                <h3>Create Your Account</h3>
-                                <p>Choose a display name for your chat profile.</p>
+                                <h3>{t("login_createTitle")}</h3>
+                                <p>{t("login_createHint")}</p>
 
                                 <div className="LoginPage_input_group">
                                     <FaUser className="LoginPage_input_icon" />
                                     <input
                                         type="text"
-                                        placeholder="Enter your name"
+                                        placeholder={t("login_namePlaceholder")}
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
                                         onKeyPress={handleKeyPress}
@@ -126,7 +128,7 @@ const LoginPage = () => {
                                         className="LoginPage_btn LoginPage_btn_primary"
                                         onClick={handleCreateAccount}
                                     >
-                                        <span>Get Started</span>
+                                        <span>{t("login_createAccount")}</span>
                                         <FaArrowRight />
                                     </button>
                                 )}
@@ -140,7 +142,7 @@ const LoginPage = () => {
                         )}
 
                         <div className="LoginPage_footer">
-                            <small>Powered by Ethereum Blockchain</small>
+                            <small>{t("login_footer")}</small>
                         </div>
                     </div>
                 </div>

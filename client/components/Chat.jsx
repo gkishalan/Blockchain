@@ -5,11 +5,13 @@ import { createPortal } from "react-dom";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ChatAppContext } from "../context/ChatAppContext";
-import { getProfilePhotoByAddress } from "../context/ChatAppContext";
 import { FaSmile, FaPaperclip, FaPaperPlane, FaArrowLeft, FaCopy, FaTrash, FaBan, FaTimes, FaUser, FaDownload, FaExternalLinkAlt, FaFileWord, FaFilePdf, FaFileAlt } from "react-icons/fa";
+import { getProfilePhotoByAddress } from "../context/ChatAppContext";
+import { useLanguage } from "../context/LanguageContext";
 
 const Chat = ({ functionName, readMessage, friendMsg, account, userName, loading, currentUserName, currentUserAddress }) => {
     const { clearCurrentChat, setError, readStatusMap, deleteMessage, hideMessageForMe, getHiddenMessages } = useContext(ChatAppContext);
+    const { t } = useLanguage();
     const [message, setMessage] = useState("");
     const [chatData, setChatData] = useState({
         name: "",
@@ -468,7 +470,7 @@ const Chat = ({ functionName, readMessage, friendMsg, account, userName, loading
                                 <FaSmile size={25} style={{ cursor: "pointer" }} />
                                 <input
                                     type="text"
-                                    placeholder="Type your message"
+                                    placeholder={t("chat_typeMessage") || "Type your message"}
                                     value={message}
                                     onChange={(e) => setMessage(e.target.value)}
                                 />
