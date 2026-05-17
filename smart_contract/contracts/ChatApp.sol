@@ -27,7 +27,6 @@ contract ChatApp {
 
     mapping(address => User) userList;
     mapping(bytes32 => Message[]) allMessages;
-    // Check if user exists
     function checkUserExists(address pubkey) public view returns (bool) {
         return bytes(userList[pubkey].name).length > 0;
     }
@@ -134,11 +133,8 @@ contract ChatApp {
         return allMessages[chatCode];
     }
 
-    // Delete message (only sender can delete for everyone)
-    function deleteMessage(
-        address friend_key,
-        uint256 msgIndex
-    ) external {
+    // Delete message
+    function deleteMessage(address friend_key, uint256 msgIndex) external {
         require(checkUserExists(msg.sender), "Create account first");
         require(checkUserExists(friend_key), "User is not registered");
         require(
@@ -147,7 +143,10 @@ contract ChatApp {
         );
 
         bytes32 chatCode = _getChatCode(msg.sender, friend_key);
-        require(msgIndex < allMessages[chatCode].length, "Invalid message index");
+        require(
+            msgIndex < allMessages[chatCode].length,
+            "Invalid message index"
+        );
         require(
             allMessages[chatCode][msgIndex].sender == msg.sender,
             "You can only delete your own messages"

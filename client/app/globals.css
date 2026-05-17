@@ -3,31 +3,23 @@
 :root {
   /* Core Colors */
   --primary-color: #6366f1;
-  /* Indigo 500 */
   --secondary-color: #06b6d4;
-  /* Cyan 500 */
   --accent-color: #d946ef;
-  /* Fuchsia 500 */
 
   /* Backgrounds */
   --bg-color: #020617;
-  /* Slate 950 */
   --bg-gradient: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #020617 100%);
 
   /* Glassmorphism */
   --glass-bg: rgba(30, 41, 59, 0.4);
-  /* Slate 800 @ 40% */
   --glass-border: 1px solid rgba(255, 255, 255, 0.08);
   --glass-highlight: 1px solid rgba(255, 255, 255, 0.15);
   --glass-blur: blur(12px);
 
   /* Text */
   --text-color: #f8fafc;
-  /* Slate 50 */
   --text-secondary: #94a3b8;
-  /* Slate 400 */
   --text-muted: #64748b;
-  /* Slate 500 */
 
   /* Surfaces */
   --card-bg: rgba(15, 23, 42, 0.6);
