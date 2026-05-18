@@ -6,9 +6,6 @@ import { ethers } from "ethers";
 import { ChatAppAddress, ChatAppABI } from "./constants";
 
 // ─── Global Profile Photo Helpers ───────────────────────────────────────────
-// Photos are stored under a NON-account-specific key so that every user on
-// the same device / same browser can look up anyone else's photo by address.
-// Key format: blockchat_profile_<walletAddress_lowercase>
 export const getProfilePhotoByAddress = (address) => {
     if (!address) return null;
     return localStorage.getItem(`blockchat_profile_${address.toLowerCase()}`) || null;
@@ -158,7 +155,7 @@ export const ChatAppProvider = ({ children }) => {
             const read = await contract.readMessage(friendAddress);
             setFriendMsg(read);
 
-            // Mark messages as read by saving current count to localStorage
+            
             const acc = accountRef.current || account;
             if (acc && friendAddress) {
                 const key = `lastSeen_${acc.toLowerCase()}_${friendAddress.toLowerCase()}`;
@@ -222,7 +219,6 @@ export const ChatAppProvider = ({ children }) => {
                     counts[friend.pubkey.toLowerCase()] = Math.max(0, totalCount - lastSeen);
 
                     // Build read status: check what the FRIEND has last seen
-                    // The friend stores their lastSeen as: lastSeen_<friend>_<me>
                     const friendSeenKey = `lastSeen_${friend.pubkey.toLowerCase()}_${acc.toLowerCase()}`;
                     const friendLastSeen = parseInt(localStorage.getItem(friendSeenKey) || "0", 10);
                     statusMap[friend.pubkey.toLowerCase()] = {
@@ -242,7 +238,7 @@ export const ChatAppProvider = ({ children }) => {
         }
     }, []);
 
-    // Poll for unread messages every 10 seconds
+
     useEffect(() => {
         // Initial fetch after a short delay to allow friendLists to load
         const initialTimer = setTimeout(() => {
@@ -288,7 +284,7 @@ export const ChatAppProvider = ({ children }) => {
             // If the message was an IPFS file, unpin it from Pinata
             if (messageContent && /\.(mypinata\.cloud|pinata\.cloud)\/(ipfs|files)\//i.test(messageContent)) {
                 try {
-                    // Extract CID from URL: https://gateway/ipfs/CID
+                    
                     const cidMatch = messageContent.match(/\/(ipfs|files)\/([a-zA-Z0-9]+)/);
                     if (cidMatch && cidMatch[2]) {
                         await fetch("/api/unpin", {
@@ -299,7 +295,7 @@ export const ChatAppProvider = ({ children }) => {
                     }
                 } catch (unpinErr) {
                     console.log("File unpin warning:", unpinErr);
-                    // Non-fatal — on-chain delete already succeeded
+                    
                 }
             }
 
