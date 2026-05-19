@@ -58,7 +58,7 @@ export const ChatAppProvider = ({ children }) => {
             setUserLists(userList);
         } catch (error) {
             console.log(error);
-            // setError("Please install and connect your wallet");
+            
         }
     };
 

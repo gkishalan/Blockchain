@@ -54,7 +54,6 @@ const Profile = () => {
                 const chatsWithDetails = await Promise.all(
                     friendLists.map(async (friend) => {
                         // Fetch messages between user and this friend
-                        // Note: readMessage in contract takes friend address
                         const messages = await contract.readMessage(friend.pubkey);
 
                         if (messages.length > 0) {
